@@ -202,7 +202,7 @@ def indexTracks(option, opt, value, parser):
     unescapedArtist = unescape(parser.values.artist)
     unescapedAlbum = unescape(parser.values.album)
 
-    match = xc.Union(xc.Match(field="artist", value=unescapedArtist), xc.Match(field="album", value=unescapedAlbum))
+    match = xc.Intersection(xc.Match(field="artist", value=unescapedArtist), xc.Match(field="album", value=unescapedAlbum))
     
     results = xmms.coll_query_infos( match, ["trackNumber", "title", "id"])
     results.wait()
