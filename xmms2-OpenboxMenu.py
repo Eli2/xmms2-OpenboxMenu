@@ -340,7 +340,7 @@ try:
     
 except IOError, detail:
     print "<openbox_pipe_menu>"
-    printSeperator("Connection failed:"+ detail)
+    Seperator("Connection failed: "+ str(detail)).write()
     print "</openbox_pipe_menu>"
     sys.exit(1)
     
