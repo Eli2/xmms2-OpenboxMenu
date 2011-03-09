@@ -209,8 +209,7 @@ def menu():
     PipeMenu("Medialib", "alphabetIndexMenu", {}).write()
     Seperator().write()
 
-    
-    newPlaylistButton = Button("New Playlist", "createPlaylist").write()
+    newPlaylistButton = Button("New Playlist", "createPlaylist")
     playlistMenu = [newPlaylistButton, Seperator()];
     
     for playlist in playlists.value():
