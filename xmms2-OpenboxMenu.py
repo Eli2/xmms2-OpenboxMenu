@@ -81,7 +81,8 @@ class Seperator():
         else:
             print "<separator label={0}/>".format(quoteattr(self.label))
 
-#Views
+#===============================================================================
+#Writers
 class AlphabetIndex():
     def write(self):
         indexKeys = map(chr, range(65, 91))
@@ -185,7 +186,10 @@ def menu():
         seperator = Seperator()
         deleteButton = Button("delete", "removePlaylist", {"name": playlist})
         
-        printSubMenu("xmms-playlist-"+playlist, playlist, [loadButton, seperator, deleteButton], playlist == activePlaylist)
+        printSubMenu("xmms-playlist-"+playlist,
+                     playlist,
+                     [loadButton, seperator, deleteButton],
+                     playlist == activePlaylist)
 
     print "  </menu>"
 
@@ -202,11 +206,18 @@ def menu():
         album = result["album"].encode('utf8');
         title = result["title"].encode('utf8');
 
-        jumpButton = Button("jump", "playlistJump", {"listPosition": str(counter)})
+        jumpButton = Button("jump",
+                            "playlistJump",
+                            {"listPosition": str(counter)} )
         seperator = Seperator()
-        deleteButton = Button("delete", "removeFromPlaylist", {"listPosition": str(counter)})
+        deleteButton = Button("delete",
+                              "removeFromPlaylist",
+                              {"listPosition": str(counter)} )
         
-        printSubMenu("xmms-activePlaylist-"+str(id), "{0} - {1} - {2}".format(artist, album, title), [jumpButton, seperator, deleteButton], id == seclected.value())
+        printSubMenu("xmms-activePlaylist-"+str(id),
+                     "{0} - {1} - {2}".format(artist, album, title),
+                     [jumpButton, seperator, deleteButton],
+                     id == seclected.value() )
 
         counter += 1
 
@@ -283,7 +294,8 @@ def createPlaylist(option, opt, value, parser):
     root = Tkinter.Tk()
     root.withdraw()
 
-    name = tkSimpleDialog.askstring("New Playlist Name", "Enter a new Playlist Name")
+    name = tkSimpleDialog.askstring("New Playlist Name",
+                                    "Enter a new Playlist Name")
     if name is not None:
         xmms.playlist_create(name).wait()
 
