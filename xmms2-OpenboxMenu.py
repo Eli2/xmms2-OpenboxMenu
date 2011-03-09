@@ -81,6 +81,69 @@ class Seperator():
         else:
             print "<separator label={0}/>".format(quoteattr(self.label))
 
+#Views
+class AlphabetIndex():
+    def write(self):
+        indexKeys = map(chr, range(65, 91))
+        for key in indexKeys:
+            artist = xc.Match( field="artist", value= str(key)+"*" )          
+            results = xmms.coll_query_infos( artist, ["artist"])
+            results.wait()
+
+            PipeMenu("{0} ({1})".format(str(key),str(len(results.value()))),
+                     "alphabetIndexArtists", 
+                     {"alphabetIndex": str(key)} ).write()
+
+class ArtistsList():
+    def __init__(self, artist):
+        self.artistMatch = xc.Match( field="artist", value= str(artist)+"*" )          
+            
+    def write(self):   
+        results = xmms.coll_query_infos(self.artistMatch, ["artist"] )
+        results.wait()
+        for result in results.value():
+            artist = str(result["artist"].encode('utf8'));
+            PipeMenu(artist, "indexAlbum", {"artist": artist} ).write()
+
+class AlbumList():
+    def __init__(self, artist):
+        self.artist = artist
+        self.artistMatch = xc.Match(field="artist", value=artist)      
+
+    def write(self):          
+        results = xmms.coll_query_infos(self.artistMatch, ["year", "album"] )
+        results.wait()
+        for result in results.value():
+            if result["album"] is not None:
+                album = result["album"].encode('utf8');
+                label = "[" + result["year"] + "]" + album if result["year"] is not None else album   
+                PipeMenu(label, "indexTracks", {"artist": self.artist, "album": album} ).write()
+
+
+class TrackList():
+    def __init__(self, artist, album):
+        self.artist = artist
+        self.album = album
+        
+        self.match = xc.Intersection(xc.Match(field="artist", value=self.artist), 
+                                     xc.Match(field="album", value=self.album))
+    
+    def write(self):
+        results = xmms.coll_query_infos( self.match, ["trackNumber", "title", "id"])
+        results.wait()
+
+        counter = 0
+        for result in results.value():
+            id = str(result["id"])
+            title = result["title"].encode('utf8') if result["title"] is not None else ""
+            trackNumber = result["trackNumber"].encode('utf8') if result["trackNumber"] is not None else ""
+                        
+            deleteButton = Button("delete", "removeFromPlaylist", {"listPosition": str(counter)})
+            addToCurrentPlaylist = Button("Add to Playlist", "insertIntoPlaylist", {"id": str(id)})
+                
+            printSubMenu("xmms-track-"+id, title, [addToCurrentPlaylist])
+            counter +=1
+
 #===============================================================================
 #Main Menu
 def menu():
@@ -155,13 +218,7 @@ def alphabetIndexMenu(option, opt, value, parser):
     print "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
     print "<openbox_pipe_menu>"
 
-    indexKeys = map(chr, range(65, 91))
-    for key in indexKeys:
-        artist = xc.Match( field="artist", value= str(key)+"*" )          
-        results = xmms.coll_query_infos( artist, ["artist"])
-        results.wait()
-
-        PipeMenu("{0} ({1})".format(str(key), str(len(results.value()))), "alphabetIndexArtists", {"alphabetIndex": str(key)} ).write()
+    AlphabetIndex().write()
 
     print "</openbox_pipe_menu>"
 
@@ -169,12 +226,7 @@ def alphabetIndexArtists(option, opt, value, parser):
     print "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
     print "<openbox_pipe_menu>"
 
-    artist = xc.Match( field="artist", value= str(parser.values.alphabetIndex)+"*" )          
-    results = xmms.coll_query_infos( artist, ["artist"])
-    results.wait()
-    for result in results.value():
-        artist = str(result["artist"].encode('utf8'));
-        PipeMenu(artist, "indexAlbum", {"artist": artist} ).write()
+    ArtistsList(unescape(parser.values.alphabetIndex)).write()
 
     print "</openbox_pipe_menu>"
 
@@ -182,16 +234,7 @@ def indexAlbum(option, opt, value, parser):
     print "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
     print "<openbox_pipe_menu>"
 
-    artist = unescape(parser.values.artist)
-    artistMatch = xc.Match(field="artist", value=artist)
-      
-    results = xmms.coll_query_infos(artistMatch, ["year", "album"])
-    results.wait()
-    for result in results.value():
-        if result["album"] is not None:
-            album = result["album"].encode('utf8');
-            label = "[" + result["year"] + "]" + album if result["year"] is not None else album   
-            PipeMenu(label, "indexTracks", {"artist": artist, "album": album} ).write()
+    AlbumList(unescape(parser.values.artist)).write()
 
     print "</openbox_pipe_menu>"
 
@@ -199,27 +242,8 @@ def indexTracks(option, opt, value, parser):
     print "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
     print "<openbox_pipe_menu>"
 
-    unescapedArtist = unescape(parser.values.artist)
-    unescapedAlbum = unescape(parser.values.album)
-    
-    match = xc.Intersection(xc.Match(field="artist", value=unescapedArtist), 
-                            xc.Match(field="album", value=unescapedAlbum))
-    
-    results = xmms.coll_query_infos( match, ["trackNumber", "title", "id"])
-    results.wait()
-
-    for result in results.value():
-        id = str(result["id"])
-        title = ""
-        if result["title"] is not None:
-            title = result["title"].encode('utf8');
-        trackNumber = ""
-        if result["trackNumber"] is not None:
-            trackNumber = result["trackNumber"].encode('utf8')
-            deleteButton = Button("delete", "removeFromPlaylist", {"listPosition": str(counter)})
-
-        addToCurrentPlaylist = Button("Add to Playlist", "insertIntoPlaylist", {"id": str(id)})
-        printSubMenu("xmms-track-"+id, title, [addToCurrentPlaylist])
+    TrackList(unescape(parser.values.artist),
+              unescape(parser.values.album) ).write()
 
     print "</openbox_pipe_menu>"
 
@@ -266,7 +290,7 @@ def createPlaylist(option, opt, value, parser):
 def removePlaylist(option, opt, value, parser):
     if parser.values.name is not None:
         xmms.playlist_remove(parser.values.name).wait()
-        
+
 #===============================================================================
 #Main
 xmms = xmmsclient.XMMS("xmms2-OpenboxMenu")
@@ -280,6 +304,8 @@ except IOError, detail:
     sys.exit(1)
     
 parser = optparse.OptionParser()
+#parser.add_option("-s", "--selftest", action="callback", callback=selftest, help="Runs a selftest on all Pipe menus.")
+
 parser.add_option("--play", action="callback", callback=play, help="play")
 parser.add_option("--pause", action="callback", callback=pause, help="stop")
 parser.add_option("--next", action="callback", callback=next, help="next")
