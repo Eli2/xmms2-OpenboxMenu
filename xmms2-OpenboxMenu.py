@@ -31,7 +31,6 @@ import Tkinter
 import tkSimpleDialog
 
 import xmmsclient
-from xmmsclient import XMMSValue
 from xmmsclient import collections as xc
 
 from xml.sax.saxutils import escape, unescape, quoteattr
@@ -308,7 +307,6 @@ def prev(option, opt, value, parser):
     xmms.playlist_set_next_rel(-1).wait()
     xmms.playback_tickle().wait()
 
-
 def playlistJump(option, opt, value, parser):
     xmms.playlist_set_next(parser.values.listPosition).wait()
     xmms.playback_tickle().wait()
@@ -319,10 +317,8 @@ def insertIntoPlaylist(option, opt, value, parser):
 def removeFromPlaylist(option, opt, value, parser):
     xmms.playlist_remove_entry(parser.values.listPosition).wait()   
         
-
 def loadPlaylist(option, opt, value, parser):
-    if parser.values.name is not None:
-        xmms.playlist_load(parser.values.name).wait()
+    xmms.playlist_load(parser.values.name).wait()
 
 def createPlaylist(option, opt, value, parser):
     root = Tkinter.Tk()
@@ -334,8 +330,7 @@ def createPlaylist(option, opt, value, parser):
         xmms.playlist_create(name).wait()
 
 def removePlaylist(option, opt, value, parser):
-    if parser.values.name is not None:
-        xmms.playlist_remove(parser.values.name).wait()
+    xmms.playlist_remove(parser.values.name).wait()
 
 #===============================================================================
 #Main
@@ -350,7 +345,6 @@ except IOError, detail:
     sys.exit(1)
     
 parser = optparse.OptionParser()
-#parser.add_option("-s", "--selftest", action="callback", callback=selftest, help="Runs a selftest on all Pipe menus.")
 
 parser.add_option("--play", action="callback", callback=play, help="play")
 parser.add_option("--pause", action="callback", callback=pause, help="stop")
