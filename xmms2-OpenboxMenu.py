@@ -20,17 +20,6 @@ def marker(isMarked):
     else:
         return ".     "
 
-def printSubMenu(id, label, entries, isMarked=None):
-    if isMarked is None:
-        print "<menu id={0} label={1}>".format(quoteattr(id), quoteattr(label))
-    else:
-        print "<menu id={0} label={1}>".format(quoteattr(id), quoteattr(marker(isMarked) + label))
-
-    for entry in entries:
-        entry.write()
-
-    print "</menu>"
-
 def parametersToString(command, parameters):
     parameterString = ""
     if parameters is not None:
@@ -56,6 +45,26 @@ class Button():
         print "<item label={0}>".format(formattedLabel)
         print "<action name=\"Execute\"><execute>{0} {1}</execute></action>".format(__file__, paramString)
         print "</item>"
+
+class Menu():
+    def __init__(self, id, label, entries=None, isMarked=None):
+        self.id = id
+        self.label = label
+        self.entries = entries
+        self.isMarked = isMarked
+        
+    def write(self):
+        if self.isMarked is None:
+            print "<menu id={0} label={1}>".format(quoteattr(self.id), quoteattr(self.label))
+        else:
+            print "<menu id={0} label={1}>".format(quoteattr(self.id),
+                                                   quoteattr(marker(self.isMarked) + self.label) )
+        
+        for entry in self.entries:
+            if entry is not None:
+                entry.write()
+
+        print "</menu>"
 
 class PipeMenu():
     def __init__(self, label, command, parameters=None, isMarked=None):
@@ -142,7 +151,7 @@ class TrackList():
             deleteButton = Button("delete", "removeFromPlaylist", {"listPosition": str(counter)})
             addToCurrentPlaylist = Button("Add to Playlist", "insertIntoPlaylist", {"id": str(id)})
                 
-            printSubMenu("xmms-track-"+id, title, [addToCurrentPlaylist])
+            Menu("xmms-track-"+id, title, [addToCurrentPlaylist]).write()
             counter +=1
 
 #===============================================================================
@@ -174,24 +183,26 @@ def menu():
     Button("≫ next", "next").write()
     Button("≪ prev", "prev").write()
     Seperator().write()
+    
     PipeMenu("Medialib", "alphabetIndexMenu", {}).write()
     Seperator().write()
 
-    print "  <menu id=\"xmms-playlists\" label=\"Playlist: {0}\">".format(activePlaylist)
-    Button("New Playlist", "createPlaylist").write()
-    Seperator().write()
-
+    
+    newPlaylistButton = Button("New Playlist", "createPlaylist").write()
+    playlistMenu = [newPlaylistButton, Seperator()];
+    
     for playlist in playlists.value():
         loadButton = Button("load", "loadPlaylist", {"name": playlist})
-        seperator = Seperator()
         deleteButton = Button("delete", "removePlaylist", {"name": playlist})
         
-        printSubMenu("xmms-playlist-"+playlist,
-                     playlist,
-                     [loadButton, seperator, deleteButton],
-                     playlist == activePlaylist)
+        playlistMenu.append(Menu("xmms-playlist-"+playlist,
+                                 playlist,
+                                 [loadButton, Seperator(), deleteButton],
+                                 playlist == activePlaylist))
 
-    print "  </menu>"
+    Menu("xmms-playlists",
+         "Playlist: {0}".format(activePlaylist),
+         playlistMenu ).write()
 
     Seperator().write()
 
@@ -209,15 +220,15 @@ def menu():
         jumpButton = Button("jump",
                             "playlistJump",
                             {"listPosition": str(counter)} )
-        seperator = Seperator()
+
         deleteButton = Button("delete",
                               "removeFromPlaylist",
                               {"listPosition": str(counter)} )
         
-        printSubMenu("xmms-activePlaylist-"+str(id),
-                     "{0} - {1} - {2}".format(artist, album, title),
-                     [jumpButton, seperator, deleteButton],
-                     id == seclected.value() )
+        Menu("xmms-activePlaylist-"+str(id),
+             "{0} - {1} - {2}".format(artist, album, title),
+             [jumpButton, Seperator(), deleteButton],
+             id == seclected.value() ).write()
 
         counter += 1
 
