@@ -112,6 +112,18 @@ class Seperator():
         else:
             print "<separator label={0}/>".format(quoteattr(self.label))
 
+class Container():
+    def __init__(self, entry):
+        self.entry = entry
+        
+    def write(self):
+        print "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+        print "<openbox_pipe_menu>"
+
+        self.entry.write()
+
+        print "</openbox_pipe_menu>"
+
 #===============================================================================
 #Writers
 class AlphabetIndex():
@@ -150,7 +162,6 @@ class AlbumList():
                 album = result["album"].encode('utf8');
                 label = "[" + result["year"] + "]" + album if result["year"] is not None else album   
                 PipeMenu(label, "indexTracks", {"artist": self.artist, "album": album} ).write()
-
 
 class TrackList():
     def __init__(self, artist, album):
@@ -258,37 +269,17 @@ def menu():
 #===============================================================================
 #Pipe Menus
 def alphabetIndexMenu(option, opt, value, parser):
-    print "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-    print "<openbox_pipe_menu>"
-
-    AlphabetIndex().write()
-
-    print "</openbox_pipe_menu>"
+    Container(AlphabetIndex()).write()
 
 def alphabetIndexArtists(option, opt, value, parser):
-    print "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-    print "<openbox_pipe_menu>"
-
-    ArtistsList(unescape(parser.values.alphabetIndex)).write()
-
-    print "</openbox_pipe_menu>"
+    Container(ArtistsList(unescape(parser.values.alphabetIndex))).write()
 
 def indexAlbum(option, opt, value, parser):
-    print "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-    print "<openbox_pipe_menu>"
-
-    AlbumList(unescape(parser.values.artist)).write()
-
-    print "</openbox_pipe_menu>"
+    Container(AlbumList(unescape(parser.values.artist))).write()
 
 def indexTracks(option, opt, value, parser):
-    print "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-    print "<openbox_pipe_menu>"
-
-    TrackList(unescape(parser.values.artist),
-              unescape(parser.values.album) ).write()
-
-    print "</openbox_pipe_menu>"
+    Container(TrackList(unescape(parser.values.artist),
+                        unescape(parser.values.album))).write()
 
 #===============================================================================
 #Commands
