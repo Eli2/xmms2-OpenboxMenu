@@ -157,12 +157,12 @@ class AlbumList():
         self.artistMatch = xc.Match(field="artist", value=artist)      
 
     def write(self):          
-        results = xmms.coll_query_infos(self.artistMatch, ["year", "album"] )
+        results = xmms.coll_query_infos(self.artistMatch, ["date", "album"] )
         results.wait()
         for result in results.value():
             if result["album"] is not None:
                 album = result["album"].encode('utf8');
-                label = "[" + result["year"] + "]" + album if result["year"] is not None else album   
+                label = "[" + result["date"].encode('utf8') + "] " + album if result["date"] is not None else album   
                 PipeMenu(label, "indexTracks", {"artist": self.artist, "album": album} ).write()
 
 class TrackList():
