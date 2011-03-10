@@ -174,19 +174,19 @@ class TrackList():
                                      xc.Match(field="album", value=self.album))
     
     def write(self):
-        results = xmms.coll_query_infos( self.match, ["trackNumber", "title", "id"])
+        results = xmms.coll_query_infos( self.match, ["tracknr", "title", "id"])
         results.wait()
 
         counter = 0
         for result in results.value():
             id = str(result["id"])
             title = result["title"].encode('utf8') if result["title"] is not None else ""
-            trackNumber = result["trackNumber"].encode('utf8') if result["trackNumber"] is not None else ""
+            trackNumber = str(result["tracknr"]) if result["tracknr"] is not None else ""
                         
             deleteButton = Button("delete", "removeFromPlaylist", {"listPosition": str(counter)})
             addToCurrentPlaylist = Button("Add to Playlist", "insertIntoPlaylist", {"id": str(id)})
                 
-            Menu("xmms-track-"+id, title, [addToCurrentPlaylist]).write()
+            Menu("xmms-track-"+id, trackNumber + " - " + title, [addToCurrentPlaylist]).write()
             counter +=1
 
 #===============================================================================
