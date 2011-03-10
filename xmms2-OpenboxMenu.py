@@ -61,7 +61,8 @@ class Button():
         self.isMarked = isMarked
     
     def write(self):
-        formattedLabel = quoteattr(marker(self.isMarked) + self.label) if self.isMarked is not None else quoteattr(self.label)   
+        formattedLabel = marker(self.isMarked) + self.label if self.isMarked is not None else self.label
+        formattedLabel = quoteattr(formattedLabel)
         paramString = parametersToString(self.command, self.parameters)
         
         print "<item label={0}>".format(formattedLabel)
@@ -96,7 +97,8 @@ class PipeMenu():
         self.isMarked = isMarked
     
     def write(self):
-        formattedLabel = quoteattr(marker(self.isMarked) + self.label) if self.isMarked is not None else quoteattr(self.label)   
+        formattedLabel = marker(self.isMarked) + self.label if self.isMarked is not None else self.label
+        formattedLabel = quoteattr(formattedLabel)
         paramString = parametersToString(self.command, self.parameters)  
         command = quoteattr("{0} {1}".format(__file__, paramString))
 
