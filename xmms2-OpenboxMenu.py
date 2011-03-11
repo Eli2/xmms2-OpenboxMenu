@@ -37,6 +37,8 @@ from xml.sax.saxutils import escape, unescape, quoteattr
 #===============================================================================
 #Helper Methods
 def marker(isMarked):
+    if isMarked is None:
+        return ""
     if isMarked:
         return "=> "
     else:
@@ -61,7 +63,7 @@ class Button():
         self.isMarked = isMarked
     
     def write(self):
-        formattedLabel = marker(self.isMarked) + self.label if self.isMarked is not None else self.label
+        formattedLabel = marker(self.isMarked) + self.label
         formattedLabel = quoteattr(formattedLabel)
         paramString = parametersToString(self.command, self.parameters)
         
@@ -97,7 +99,7 @@ class PipeMenu():
         self.isMarked = isMarked
     
     def write(self):
-        formattedLabel = marker(self.isMarked) + self.label if self.isMarked is not None else self.label
+        formattedLabel = marker(self.isMarked) + self.label
         formattedLabel = quoteattr(formattedLabel)
         paramString = parametersToString(self.command, self.parameters)  
         command = quoteattr("{0} {1}".format(__file__, paramString))
