@@ -68,7 +68,9 @@ class Button():
         paramString = parametersToString(self.command, self.parameters)
         
         print "<item label={0}>".format(formattedLabel)
-        print "<action name=\"Execute\"><execute>{0} {1}</execute></action>".format(__file__, paramString)
+        print " <action name=\"Execute\">"
+        print "  <execute>{0} {1}</execute>".format(__file__, paramString)
+        print " </action>"
         print "</item>"
 
 class Menu():
