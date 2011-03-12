@@ -53,6 +53,12 @@ def parametersToString(command, parameters):
     parameterString += "--" + command + " "
     return parameterString
 
+def humanReadableSize(size):
+    for x in ['bytes','KB','MB','GB']:
+        if size < 1024.0:
+            return "%3.1f%s" % (size, x)
+        size /= 1024.0
+
 #===============================================================================
 #Classes
 class Label():
@@ -219,7 +225,7 @@ class TrackInfo():
         Label("Title \t: " + minfo["title"].encode('utf8')).write()
         Label("Duration \t: " + str(minfo["duration"])).write()
         Seperator().write()     
-        Label("Size \t: " + str(minfo["size"])).write()
+        Label("Size \t\t: " + humanReadableSize(minfo["size"])).write()
         Label("Bitrate \t: " + str(minfo["bitrate"])).write()
         Label("Url \t: " + minfo["url"].encode('utf8')).write()
 
