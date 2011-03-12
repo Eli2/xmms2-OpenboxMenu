@@ -138,8 +138,9 @@ class AlphabetIndex():
             artist = xc.Match( field="artist", value= str(key)+"*" )          
             results = xmms.coll_query_infos( artist, ["artist"])
             results.wait()
-
-            PipeMenu("{0} ({1})".format(str(key),str(len(results.value()))),
+            
+            groupLabel = "{0} ({1})".format(str(key), str(len(results.value())))
+            PipeMenu(groupLabel,
                      "alphabetIndexArtists", 
                      {"alphabetIndex": str(key)} ).write()
 
