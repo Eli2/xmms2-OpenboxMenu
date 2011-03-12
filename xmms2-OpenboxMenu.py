@@ -55,6 +55,17 @@ def parametersToString(command, parameters):
 
 #===============================================================================
 #Classes
+class Label():
+    def __init__(self, label, isMarked=None):
+        self.label = label
+        self.isMarked = isMarked
+    
+    def write(self):
+        formattedLabel = quoteattr(marker(self.isMarked) + self.label)
+        
+        print "<item label={0}>".format(formattedLabel)
+        print "</item>"
+
 class Button():
     def __init__(self, label, command, parameters=None, isMarked=None):
         self.label = label
@@ -189,9 +200,28 @@ class TrackList():
                         
             deleteButton = Button("delete", "removeFromPlaylist", {"listPosition": str(counter)})
             addToCurrentPlaylist = Button("Add to Playlist", "insertIntoPlaylist", {"id": str(id)})
-                
-            Menu("xmms-track-"+id, trackNumber + " - " + title, [addToCurrentPlaylist]).write()
+            
+            trackInfo = PipeMenu("Infos", "trackInfo", {"id": str(id)})  
+            
+            Menu("xmms-track-"+id, trackNumber + " - " + title, [addToCurrentPlaylist, trackInfo]).write()
             counter +=1
+
+class TrackInfo():
+    def __init__(self, id):
+        self.id = int(id)
+                                     
+    def write(self):
+        results = xmms.medialib_get_info(self.id)
+        results.wait()
+        minfo = results.value()
+        Label("Artist \t: " + minfo["artist"].encode('utf8')).write()
+        Label("Album \t: " + minfo["album"].encode('utf8')).write()
+        Label("Title \t: " + minfo["title"].encode('utf8')).write()
+        Label("Duration \t: " + str(minfo["duration"])).write()
+        Seperator().write()     
+        Label("Size \t: " + str(minfo["size"])).write()
+        Label("Bitrate \t: " + str(minfo["bitrate"])).write()
+        Label("Url \t: " + minfo["url"].encode('utf8')).write()
 
 #===============================================================================
 #Main Menu
@@ -286,6 +316,9 @@ def indexAlbum(option, opt, value, parser):
 def indexTracks(option, opt, value, parser):
     Container(TrackList(unescape(parser.values.artist),
                         unescape(parser.values.album))).write()
+                        
+def trackInfo(option, opt, value, parser):
+    Container(TrackInfo(parser.values.id)).write()
 
 #===============================================================================
 #Commands
@@ -367,6 +400,9 @@ parser.add_option("--name", action="store", type="string", dest="name")
 parser.add_option("--loadPlaylist", action="callback", callback=loadPlaylist, help="")
 parser.add_option("--createPlaylist", action="callback", callback=createPlaylist, help="")
 parser.add_option("--removePlaylist", action="callback", callback=removePlaylist, help="")
+
+parser.add_option("--trackInfo", action="callback", callback=trackInfo, help="")
+
 
 (options, args) = parser.parse_args()
 
