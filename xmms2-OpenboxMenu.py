@@ -81,11 +81,9 @@ class Menu():
         self.isMarked = isMarked
         
     def write(self):
-        if self.isMarked is None:
-            print "<menu id={0} label={1}>".format(quoteattr(self.id), quoteattr(self.label))
-        else:
-            print "<menu id={0} label={1}>".format(quoteattr(self.id),
-                                                   quoteattr(marker(self.isMarked) + self.label) )
+        formattedMarker = marker(self.isMarked) + self.label
+        print "<menu id={0} label={1}>".format(quoteattr(self.id),
+                                               quoteattr(formattedMarker))
         
         for entry in self.entries:
             if entry is not None:
