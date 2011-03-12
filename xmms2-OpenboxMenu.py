@@ -56,7 +56,7 @@ def parametersToString(command, parameters):
 def humanReadableSize(size):
     for x in ['bytes','KB','MB','GB']:
         if size < 1024.0:
-            return "%3.1f%s" % (size, x)
+            return "%3.2f%s" % (size, x)
         size /= 1024.0
 
 #===============================================================================
@@ -227,7 +227,12 @@ class TrackInfo():
         Seperator().write()     
         Label("Size \t\t: " + humanReadableSize(minfo["size"])).write()
         Label("Bitrate \t: " + str(minfo["bitrate"])).write()
-        Label("Url \t: " + minfo["url"].encode('utf8')).write()
+        
+        url = minfo["url"].encode('utf8')
+        filename = url.split('/')[-1]
+
+        Label("Url \t: " + url).write()
+        Label("File \t: " + filename).write()
 
 #===============================================================================
 #Main Menu
