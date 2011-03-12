@@ -99,12 +99,13 @@ class PipeMenu():
         self.isMarked = isMarked
     
     def write(self):
-        formattedLabel = marker(self.isMarked) + self.label
-        formattedLabel = quoteattr(formattedLabel)
+        formattedLabel = quoteattr(marker(self.isMarked) + self.label)
         paramString = parametersToString(self.command, self.parameters)  
         command = quoteattr("{0} {1}".format(__file__, paramString))
 
-        print "<menu execute={0} id={1} label={2}/>".format(command, quoteattr(paramString), formattedLabel)
+        print "<menu execute={0} id={1} label={2}/>".format(command,
+                                                            quoteattr(paramString),
+                                                            formattedLabel)
 
 class Seperator():
     def __init__(self, label=None):
