@@ -182,8 +182,8 @@ class AlbumList():
         results.wait()
         for result in results.value():
             if result["album"] is not None:
-                album = result["album"].encode('utf8');
-                label = "[" + result["date"].encode('utf8') + "] " + album if result["date"] is not None else album   
+                album = result["album"].encode('utf8') if 'album' in result else "no album";
+                label = "[" + result["date"].encode('utf8') + "] " + album if 'date' in result else album   
                 PipeMenu(label, "indexTracks", {"artist": self.artist, "album": album} ).write()
 
 class TrackList():
@@ -201,8 +201,8 @@ class TrackList():
         counter = 0
         for result in results.value():
             id = str(result["id"])
-            title = result["title"].encode('utf8') if result["title"] is not None else ""
-            trackNumber = str(result["tracknr"]) if result["tracknr"] is not None else ""
+            title = result.get("title", "").encode('utf8')
+            trackNumber = str(result['tracknr']) if 'tracknr' in result else ""
                         
             deleteButton = Button("delete", "removeFromPlaylist", {"listPosition": str(counter)})
             addToCurrentPlaylist = Button("Add to Playlist", "insertIntoPlaylist", {"id": str(id)})
