@@ -292,9 +292,9 @@ def menu():
         infos.wait()
         result = infos.value();
 
-        artist = result["artist"].encode('utf8') if result.has_key('artist') else "";
-        album = result["album"].encode('utf8') if result.has_key('album') is not None else "";
-        title = result["title"].encode('utf8') if result.has_key('title') is not None else "";
+        artist = result.get("artist", "").encode('utf8')
+        album = result.get("album", "").encode('utf8')
+        title = result.get("title", "").encode('utf8')
 
         jumpButton = Button("jump",
                             "playlistJump",
