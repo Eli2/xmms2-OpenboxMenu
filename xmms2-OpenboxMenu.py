@@ -59,6 +59,16 @@ def humanReadableSize(size):
             return "%3.2f%s" % (size, x)
         size /= 1024.0
 
+def readString(dictionary, key, default=""):
+    if key in dictionary:
+        value = dictionary[key]
+        if isinstance(value, basestring):
+            return value.encode('utf8')
+        else:
+            return str(value)
+    else:
+        return default
+
 #===============================================================================
 #Classes
 class Label():
@@ -169,7 +179,7 @@ class ArtistsList():
         results = xmms.coll_query_infos(self.artistMatch, ["artist"] )
         results.wait()
         for result in results.value():
-            artist = str(result["artist"].encode('utf8'));
+            artist = readString(result, 'artist')
             PipeMenu(artist, "indexAlbum", {"artist": artist} ).write()
 
 class AlbumList():
@@ -182,8 +192,8 @@ class AlbumList():
         results.wait()
         for result in results.value():
             if result["album"] is not None:
-                album = result["album"].encode('utf8') if 'album' in result else "no album";
-                label = "[" + result["date"].encode('utf8') + "] " + album if 'date' in result else album   
+                album = readString(result, 'album')
+                label = "[" + readString(result, 'date') + "] " + album
                 PipeMenu(label, "indexTracks", {"artist": self.artist, "album": album} ).write()
 
 class TrackList():
@@ -201,8 +211,8 @@ class TrackList():
         counter = 0
         for result in results.value():
             id = str(result["id"])
-            title = result.get("title", "").encode('utf8')
-            trackNumber = str(result['tracknr']) if 'tracknr' in result else ""
+            title = readString(result, 'title')
+            trackNumber = readString(result, 'tracknr')
                         
             deleteButton = Button("delete", "removeFromPlaylist", {"listPosition": str(counter)})
             addToCurrentPlaylist = Button("Add to Playlist", "insertIntoPlaylist", {"id": str(id)})
@@ -220,15 +230,15 @@ class TrackInfo():
         results = xmms.medialib_get_info(self.id)
         results.wait()
         minfo = results.value()
-        Label("Artist \t: " + minfo["artist"].encode('utf8')).write()
-        Label("Album \t: " + minfo["album"].encode('utf8')).write()
-        Label("Title \t: " + minfo["title"].encode('utf8')).write()
-        Label("Duration \t: " + str(minfo["duration"])).write()
+        Label("Artist \t: " + readString(minfo, 'artist')).write()
+        Label("Album \t: " + readString(minfo, 'album')).write()
+        Label("Title \t: " + readString(minfo, 'title')).write()
+        Label("Duration \t: " + readString(minfo, 'duration')).write()
         Seperator().write()     
         Label("Size \t\t: " + humanReadableSize(minfo["size"])).write()
-        Label("Bitrate \t: " + str(minfo["bitrate"])).write()
+        Label("Bitrate \t: " + readString(minfo, 'bitrate')).write()
         
-        url = minfo["url"].encode('utf8')
+        url = readString(minfo, 'url')
         filename = url.split('/')[-1]
 
         Label("Url \t: " + url).write()
@@ -292,9 +302,9 @@ def menu():
         infos.wait()
         result = infos.value();
 
-        artist = result.get("artist", "").encode('utf8')
-        album = result.get("album", "").encode('utf8')
-        title = result.get("title", "").encode('utf8')
+        artist = readString(result, 'artist')
+        album = readString(result, 'album')
+        title = readString(result, 'title')
 
         jumpButton = Button("jump",
                             "playlistJump",
