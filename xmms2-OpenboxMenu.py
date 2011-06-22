@@ -295,10 +295,26 @@ def menu():
 
     Seperator().write()
 
-    counter = 0
+    displayRange = 20
 
-    for id in activePlaylistEntries.value():
-        infos = xmms.medialib_get_info(id)
+    activePlaylistIds = activePlaylistEntries.value()
+    activeId = seclected.value();
+    
+    if activePlaylistIds.count(activeId) == 1:
+        selectedIndex = activePlaylistIds.index(seclected.value())
+        
+        minIndex = max(0, selectedIndex - displayRange)
+        maxIndex = min(len(activePlaylistIds), selectedIndex + 1 + displayRange)
+    else:
+        minIndex = 0;
+        maxIndex = min(len(activePlaylistIds), displayRange)
+    
+    displayRange = range(minIndex, maxIndex)
+    
+    for id in displayRange:
+        medialibId = activePlaylistIds[id]
+            
+        infos = xmms.medialib_get_info(medialibId)
         infos.wait()
         result = infos.value();
 
@@ -308,18 +324,19 @@ def menu():
 
         jumpButton = Button("jump",
                             "playlistJump",
-                            {"listPosition": str(counter)} )
+                            {"listPosition": str(id)} )
 
         deleteButton = Button("delete",
                               "removeFromPlaylist",
-                              {"listPosition": str(counter)} )
+                              {"listPosition": str(id)} )
         
-        Menu("xmms-activePlaylist-"+str(id),
-             "{0} - {1} - {2}".format(artist, album, title),
+        entryLabel = "{0}|  {1} - {2} - {3}".format(
+                      str(id).zfill(3), artist, album, title)
+                     
+        Menu("xmms-activePlaylist-"+str(medialibId),
+             entryLabel,
              [jumpButton, Seperator(), deleteButton],
-             id == seclected.value() ).write()
-
-        counter += 1
+             medialibId == seclected.value() ).write()
 
     print "</openbox_pipe_menu>"
 
