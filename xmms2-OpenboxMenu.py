@@ -244,6 +244,29 @@ class TrackInfo():
         Label("Url \t: " + url).write()
         Label("File \t: " + filename).write()
 
+class Config():
+    def __init__(self, namespace):
+        self.namespace = namespace
+
+    def write(self):      
+        results = xmms.config_list_values();
+        results.wait()
+        resultData = results.value()
+        
+        if self.namespace is None:
+            namespaces = set()
+        
+            for entry in resultData:
+                namespaces.add(entry.split('.')[0])
+                
+            for setEntry in namespaces:
+                PipeMenu(setEntry, "config", 
+                     {"namespace": str(setEntry)} ).write()
+        else:
+            for entry in resultData:
+                if entry.startswith(self.namespace):
+                    Label(entry +"\t\t\t" + resultData[entry]).write()
+
 #===============================================================================
 #Main Menu
 def menu():
@@ -275,6 +298,7 @@ def menu():
     Seperator().write()
     
     PipeMenu("Medialib", "alphabetIndexMenu", {}).write()
+    PipeMenu("Config", "config", {}).write()
     Seperator().write()
 
     newPlaylistButton = Button("New Playlist", "createPlaylist")
@@ -358,6 +382,9 @@ def indexTracks(option, opt, value, parser):
 def trackInfo(option, opt, value, parser):
     Container(TrackInfo(parser.values.id)).write()
 
+def config(option, opt, value, parser):
+    Container(Config(parser.values.namespace)).write()
+
 #===============================================================================
 #Commands
 def play(option, opt, value, parser):
@@ -398,7 +425,7 @@ def createPlaylist(option, opt, value, parser):
 
 def removePlaylist(option, opt, value, parser):
     xmms.playlist_remove(parser.values.name).wait()
-
+    
 #===============================================================================
 #Main
 xmms = xmmsclient.XMMS("xmms2-OpenboxMenu")
@@ -440,6 +467,10 @@ parser.add_option("--createPlaylist", action="callback", callback=createPlaylist
 parser.add_option("--removePlaylist", action="callback", callback=removePlaylist, help="")
 
 parser.add_option("--trackInfo", action="callback", callback=trackInfo, help="")
+
+
+parser.add_option("--config", action="callback", callback=config, help="")
+parser.add_option("--namespace", action="store", type="string", dest="namespace");
 
 
 (options, args) = parser.parse_args()
