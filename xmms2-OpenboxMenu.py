@@ -245,15 +245,15 @@ class TrackInfo():
         Label("File \t: " + filename).write()
 
 class Config():
-    def __init__(self, namespace):
-        self.namespace = namespace
+    def __init__(self, configKey):
+        self.configKey = configKey
 
     def write(self):      
         results = xmms.config_list_values();
         results.wait()
         resultData = results.value()
         
-        if self.namespace is None:
+        if self.configKey is None:
             namespaces = set()
         
             for entry in resultData:
@@ -261,11 +261,48 @@ class Config():
                 
             for setEntry in namespaces:
                 PipeMenu(setEntry, "config", 
-                     {"namespace": str(setEntry)} ).write()
+                     {"configKey": str(setEntry)} ).write()
         else:
+            namespaces = set()
             for entry in resultData:
-                if entry.startswith(self.namespace):
+                if entry.startswith(self.configKey):
+                    namespaces.add(entry)
+                    
+            if self.configKey == "equalizer":
+                Equalizer(namespaces).write();
+           
+            else:
+                for entry in namespaces:
                     Label(entry +"\t\t\t" + resultData[entry]).write()
+                        
+class Equalizer():
+    def __init__(self, childEntries):
+        self.childEntries = childEntries
+
+    def write(self):
+        results = xmms.config_list_values();
+        results.wait()
+        resultData = results.value()
+        
+        equalizerEnabledKey = "equalizer.enabled"
+        equalizerEnabled = int(resultData[equalizerEnabledKey])
+        if(equalizerEnabled == 1):
+            Button("Status: Enabled", "config-set", 
+                  { "configKey"  : "equalizer.enabled",
+                    "configValue": "0"} ).write()
+        else:
+            Button("Status: Disabled", "config-set", 
+                  { "configKey"  : "equalizer.enabled",
+                    "configValue": "1"} ).write()
+                         
+        Seperator().write()     
+                
+        bands = int(resultData["equalizer.bands"])
+        for band in range(0, bands):
+            bandGainName = "equalizer.gain" + str(band).zfill(2)
+            bandValue = resultData[bandGainName]
+
+            Label("Band " + str(band) + str(bandValue)).write()
 
 #===============================================================================
 #Main Menu
@@ -383,8 +420,8 @@ def trackInfo(option, opt, value, parser):
     Container(TrackInfo(parser.values.id)).write()
 
 def config(option, opt, value, parser):
-    Container(Config(parser.values.namespace)).write()
-
+    Container(Config(parser.values.configKey)).write()
+  
 #===============================================================================
 #Commands
 def play(option, opt, value, parser):
@@ -426,6 +463,8 @@ def createPlaylist(option, opt, value, parser):
 def removePlaylist(option, opt, value, parser):
     xmms.playlist_remove(parser.values.name).wait()
     
+def configSet(option, opt, value, parser):
+    xmms.config_set_value(parser.values.configKey, parser.values.configValue).wait()    
 #===============================================================================
 #Main
 xmms = xmmsclient.XMMS("xmms2-OpenboxMenu")
@@ -470,7 +509,9 @@ parser.add_option("--trackInfo", action="callback", callback=trackInfo, help="")
 
 
 parser.add_option("--config", action="callback", callback=config, help="")
-parser.add_option("--namespace", action="store", type="string", dest="namespace");
+parser.add_option("--config-set", action="callback", callback=configSet, help="")
+parser.add_option("--configKey", action="store", type="string", dest="configKey")
+parser.add_option("--configValue", action="store", type="string", dest="configValue")
 
 
 (options, args) = parser.parse_args()
