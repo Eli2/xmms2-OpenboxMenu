@@ -467,55 +467,56 @@ def configSet(option, opt, value, parser):
     xmms.config_set_value(parser.values.configKey, parser.values.configValue).wait()    
 #===============================================================================
 #Main
-xmms = xmmsclient.XMMS("xmms2-OpenboxMenu")
-try:
-    xmms.connect(os.getenv("XMMS_PATH"))
-    
-except IOError, detail:
-    print "<openbox_pipe_menu>"
-    Seperator("Connection failed: "+ str(detail)).write()
-    print "</openbox_pipe_menu>"
-    sys.exit(1)
-    
-parser = optparse.OptionParser()
+if __name__ == "__main__":
+    xmms = xmmsclient.XMMS("xmms2-OpenboxMenu")
+    try:
+        xmms.connect(os.getenv("XMMS_PATH"))
+        
+    except IOError, detail:
+        print "<openbox_pipe_menu>"
+        Seperator("Connection failed: "+ str(detail)).write()
+        print "</openbox_pipe_menu>"
+        sys.exit(1)
+        
+    parser = optparse.OptionParser()
 
-parser.add_option("--play", action="callback", callback=play, help="play")
-parser.add_option("--pause", action="callback", callback=pause, help="stop")
-parser.add_option("--next", action="callback", callback=next, help="next")
-parser.add_option("--prev", action="callback", callback=prev, help="prev")
+    parser.add_option("--play", action="callback", callback=play, help="play")
+    parser.add_option("--pause", action="callback", callback=pause, help="stop")
+    parser.add_option("--next", action="callback", callback=next, help="next")
+    parser.add_option("--prev", action="callback", callback=prev, help="prev")
 
-parser.add_option("--id", action="store", type="int", dest="id")
-parser.add_option("--artist", action="store", type="string", dest="artist")
-parser.add_option("--album", action="store", type="string", dest="album")
+    parser.add_option("--id", action="store", type="int", dest="id")
+    parser.add_option("--artist", action="store", type="string", dest="artist")
+    parser.add_option("--album", action="store", type="string", dest="album")
 
-parser.add_option("--alphabetIndex", action="store", type="string", dest="alphabetIndex")
-parser.add_option("--alphabetIndexMenu", action="callback", callback=alphabetIndexMenu, help="")
-parser.add_option("--alphabetIndexArtists", action="callback", callback=alphabetIndexArtists, help="")
-parser.add_option("--indexAlbum", action="callback", callback=indexAlbum, help="")
-parser.add_option("--indexTracks", action="callback", callback=indexTracks, help="")
+    parser.add_option("--alphabetIndex", action="store", type="string", dest="alphabetIndex")
+    parser.add_option("--alphabetIndexMenu", action="callback", callback=alphabetIndexMenu, help="")
+    parser.add_option("--alphabetIndexArtists", action="callback", callback=alphabetIndexArtists, help="")
+    parser.add_option("--indexAlbum", action="callback", callback=indexAlbum, help="")
+    parser.add_option("--indexTracks", action="callback", callback=indexTracks, help="")
 
-parser.add_option("--listPosition", action="store", type="int", dest="listPosition")
-parser.add_option("--playlistJump", action="callback", callback=playlistJump, help="Jump to index in Playlist")
+    parser.add_option("--listPosition", action="store", type="int", dest="listPosition")
+    parser.add_option("--playlistJump", action="callback", callback=playlistJump, help="Jump to index in Playlist")
 
-parser.add_option("--insertIntoPlaylist", action="callback", callback=insertIntoPlaylist)
-parser.add_option("--removeFromPlaylist", action="callback", callback=removeFromPlaylist)
+    parser.add_option("--insertIntoPlaylist", action="callback", callback=insertIntoPlaylist)
+    parser.add_option("--removeFromPlaylist", action="callback", callback=removeFromPlaylist)
 
-parser.add_option("--name", action="store", type="string", dest="name")
-parser.add_option("--loadPlaylist", action="callback", callback=loadPlaylist, help="")
-parser.add_option("--createPlaylist", action="callback", callback=createPlaylist, help="")
-parser.add_option("--removePlaylist", action="callback", callback=removePlaylist, help="")
+    parser.add_option("--name", action="store", type="string", dest="name")
+    parser.add_option("--loadPlaylist", action="callback", callback=loadPlaylist, help="")
+    parser.add_option("--createPlaylist", action="callback", callback=createPlaylist, help="")
+    parser.add_option("--removePlaylist", action="callback", callback=removePlaylist, help="")
 
-parser.add_option("--trackInfo", action="callback", callback=trackInfo, help="")
-
-
-parser.add_option("--config", action="callback", callback=config, help="")
-parser.add_option("--config-set", action="callback", callback=configSet, help="")
-parser.add_option("--configKey", action="store", type="string", dest="configKey")
-parser.add_option("--configValue", action="store", type="string", dest="configValue")
+    parser.add_option("--trackInfo", action="callback", callback=trackInfo, help="")
 
 
-(options, args) = parser.parse_args()
+    parser.add_option("--config", action="callback", callback=config, help="")
+    parser.add_option("--config-set", action="callback", callback=configSet, help="")
+    parser.add_option("--configKey", action="store", type="string", dest="configKey")
+    parser.add_option("--configValue", action="store", type="string", dest="configValue")
 
-if len(sys.argv) == 1:
-    menu()
+
+    (options, args) = parser.parse_args()
+
+    if len(sys.argv) == 1:
+        menu()
 
