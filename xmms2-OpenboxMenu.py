@@ -164,9 +164,8 @@ class AlphabetIndex():
         for key in indexKeys:
             artist = xc.Match( field="artist", value= str(key)+"*" )          
             results = xmms.coll_query_infos( artist, ["artist"])
-            results.wait()
             
-            groupLabel = "{0} ({1})".format(str(key), str(len(results.value())))
+            groupLabel = "{0} ({1})".format(str(key), str(len(results)))
             PipeMenu(groupLabel,
                      "alphabetIndexArtists", 
                      {"alphabetIndex": str(key)} ).write()
@@ -177,8 +176,8 @@ class ArtistsList():
             
     def write(self):   
         results = xmms.coll_query_infos(self.artistMatch, ["artist"] )
-        results.wait()
-        for result in results.value():
+
+        for result in results:
             artist = readString(result, 'artist')
             PipeMenu(artist, "indexAlbum", {"artist": artist} ).write()
 
@@ -189,8 +188,8 @@ class AlbumList():
 
     def write(self):          
         results = xmms.coll_query_infos(self.artistMatch, ["date", "album"] )
-        results.wait()
-        for result in results.value():
+
+        for result in results:
             if result["album"] is not None:
                 album = readString(result, 'album')
                 label = "[" + readString(result, 'date') + "] " + album
@@ -206,10 +205,9 @@ class TrackList():
     
     def write(self):
         results = xmms.coll_query_infos( self.match, ["tracknr", "title", "id"])
-        results.wait()
 
         counter = 0
-        for result in results.value():
+        for result in results:
             id = str(result["id"])
             title = readString(result, 'title')
             trackNumber = readString(result, 'tracknr')
@@ -227,9 +225,8 @@ class TrackInfo():
         self.id = int(id)
                                      
     def write(self):
-        results = xmms.medialib_get_info(self.id)
-        results.wait()
-        minfo = results.value()
+        minfo = xmms.medialib_get_info(self.id)
+
         Label("Artist \t: " + readString(minfo, 'artist')).write()
         Label("Album \t: " + readString(minfo, 'album')).write()
         Label("Title \t: " + readString(minfo, 'title')).write()
@@ -249,9 +246,7 @@ class Config():
         self.configKey = configKey
 
     def write(self):      
-        results = xmms.config_list_values();
-        results.wait()
-        resultData = results.value()
+        resultData = xmms.config_list_values();
         
         if self.configKey is None:
             namespaces = set()
@@ -280,9 +275,7 @@ class Equalizer():
         self.childEntries = childEntries
 
     def write(self):
-        results = xmms.config_list_values();
-        results.wait()
-        resultData = results.value()
+        resultData = xmms.config_list_values();
         
         equalizerEnabledKey = "equalizer.enabled"
         equalizerEnabled = int(resultData[equalizerEnabledKey])
@@ -308,24 +301,14 @@ class Equalizer():
 #Main Menu
 def menu():
     status = xmms.playback_status()
-    status.wait()
-
     playlists = xmms.playlist_list()
-    playlists.wait()
-
-    result = xmms.playlist_current_active()
-    result.wait()
-    activePlaylist = result.value()
-
-    activePlaylistEntries = xmms.playlist_list_entries()
-    activePlaylistEntries.wait()
-
-    seclected = xmms.playback_current_id()
-    seclected.wait()
+    activePlaylist = xmms.playlist_current_active()
+    activePlaylistIds = xmms.playlist_list_entries()
+    activeId = xmms.playback_current_id()
 
     print "<openbox_pipe_menu>"
 
-    if status.value() == xmmsclient.PLAYBACK_STATUS_PLAY:
+    if status == xmmsclient.PLAYBACK_STATUS_PLAY:
         Button("⧐ Pause", "pause").write()
     else:
         Button("⧐ Play", "play").write()
@@ -341,7 +324,7 @@ def menu():
     newPlaylistButton = Button("New Playlist", "createPlaylist")
     playlistMenu = [newPlaylistButton, Seperator()];
     
-    for playlist in playlists.value():
+    for playlist in playlists:
         loadButton = Button("load", "loadPlaylist", {"name": playlist})
         deleteButton = Button("delete", "removePlaylist", {"name": playlist})
         
@@ -358,11 +341,8 @@ def menu():
 
     displayRange = 20
 
-    activePlaylistIds = activePlaylistEntries.value()
-    activeId = seclected.value();
-    
     if activePlaylistIds.count(activeId) == 1:
-        selectedIndex = activePlaylistIds.index(seclected.value())
+        selectedIndex = activePlaylistIds.index(activeId)
         
         minIndex = max(0, selectedIndex - displayRange)
         maxIndex = min(len(activePlaylistIds), selectedIndex + 1 + displayRange)
@@ -375,9 +355,7 @@ def menu():
     for id in displayRange:
         medialibId = activePlaylistIds[id]
             
-        infos = xmms.medialib_get_info(medialibId)
-        infos.wait()
-        result = infos.value();
+        result = xmms.medialib_get_info(medialibId)
 
         artist = readString(result, 'artist')
         album = readString(result, 'album')
@@ -397,7 +375,7 @@ def menu():
         Menu("xmms-activePlaylist-"+str(medialibId),
              entryLabel,
              [jumpButton, Seperator(), deleteButton],
-             medialibId == seclected.value() ).write()
+             medialibId == activeId ).write()
 
     print "</openbox_pipe_menu>"
 
@@ -425,31 +403,31 @@ def config(option, opt, value, parser):
 #===============================================================================
 #Commands
 def play(option, opt, value, parser):
-    xmms.playback_start().wait()
+    xmms.playback_start()
 
 def pause(option, opt, value, parser):
-    xmms.playback_pause().wait()
+    xmms.playback_pause()
 
 def next(option, opt, value, parser):
-    xmms.playlist_set_next_rel(1).wait()
-    xmms.playback_tickle().wait()
+    xmms.playlist_set_next_rel(1)
+    xmms.playback_tickle()
 
 def prev(option, opt, value, parser):
-    xmms.playlist_set_next_rel(-1).wait()
-    xmms.playback_tickle().wait()
+    xmms.playlist_set_next_rel(-1)
+    xmms.playback_tickle()
 
 def playlistJump(option, opt, value, parser):
-    xmms.playlist_set_next(parser.values.listPosition).wait()
-    xmms.playback_tickle().wait()
+    xmms.playlist_set_next(parser.values.listPosition)
+    xmms.playback_tickle()
 
 def insertIntoPlaylist(option, opt, value, parser):
-    xmms.playlist_insert_id(0, parser.values.id).wait()
+    xmms.playlist_insert_id(0, parser.values.id)
     
 def removeFromPlaylist(option, opt, value, parser):
-    xmms.playlist_remove_entry(parser.values.listPosition).wait()   
+    xmms.playlist_remove_entry(parser.values.listPosition)
         
 def loadPlaylist(option, opt, value, parser):
-    xmms.playlist_load(parser.values.name).wait()
+    xmms.playlist_load(parser.values.name)
 
 def createPlaylist(option, opt, value, parser):
     root = Tkinter.Tk()
@@ -458,17 +436,17 @@ def createPlaylist(option, opt, value, parser):
     name = tkSimpleDialog.askstring("New Playlist Name",
                                     "Enter a new Playlist Name")
     if name is not None:
-        xmms.playlist_create(name).wait()
+        xmms.playlist_create(name)
 
 def removePlaylist(option, opt, value, parser):
-    xmms.playlist_remove(parser.values.name).wait()
+    xmms.playlist_remove(parser.values.name)
     
 def configSet(option, opt, value, parser):
-    xmms.config_set_value(parser.values.configKey, parser.values.configValue).wait()    
+    xmms.config_set_value(parser.values.configKey, parser.values.configValue)
 #===============================================================================
 #Main
 if __name__ == "__main__":
-    xmms = xmmsclient.XMMS("xmms2-OpenboxMenu")
+    xmms = xmmsclient.XMMSSync("xmms2-OpenboxMenu")
     try:
         xmms.connect(os.getenv("XMMS_PATH"))
         
