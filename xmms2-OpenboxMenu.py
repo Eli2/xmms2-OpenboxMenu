@@ -24,6 +24,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import optparse
+import ConfigParser
 import os
 import sys
 
@@ -249,6 +250,18 @@ class Config():
         resultData = xmms.config_list_values();
         
         if self.configKey is None:
+            Label("Presets:").write()
+            config = ConfigParser.RawConfigParser()
+            absolutePath = os.path.expanduser("~/.config/xmms2/clients/openboxMenu/configPresets.ini")
+            config.read(absolutePath)
+            
+            for preset in config.sections():
+                Button(preset, "preset-load", 
+                      { "presetName"  : preset} ).write()
+        
+        
+            Seperator().write()
+        
             namespaces = set()
         
             for entry in resultData:
@@ -263,39 +276,8 @@ class Config():
                 if entry.startswith(self.configKey):
                     namespaces.add(entry)
                     
-            if self.configKey == "equalizer":
-                Equalizer(namespaces).write();
-           
-            else:
-                for entry in namespaces:
-                    Label(entry +"\t\t\t" + resultData[entry]).write()
-                        
-class Equalizer():
-    def __init__(self, childEntries):
-        self.childEntries = childEntries
-
-    def write(self):
-        resultData = xmms.config_list_values();
-        
-        equalizerEnabledKey = "equalizer.enabled"
-        equalizerEnabled = int(resultData[equalizerEnabledKey])
-        if(equalizerEnabled == 1):
-            Button("Status: Enabled", "config-set", 
-                  { "configKey"  : "equalizer.enabled",
-                    "configValue": "0"} ).write()
-        else:
-            Button("Status: Disabled", "config-set", 
-                  { "configKey"  : "equalizer.enabled",
-                    "configValue": "1"} ).write()
-                         
-        Seperator().write()     
-                
-        bands = int(resultData["equalizer.bands"])
-        for band in range(0, bands):
-            bandGainName = "equalizer.gain" + str(band).zfill(2)
-            bandValue = resultData[bandGainName]
-
-            Label("Band " + str(band) + str(bandValue)).write()
+            for entry in namespaces:
+                Label(entry +"\t\t\t" + resultData[entry]).write()
 
 #===============================================================================
 #Main Menu
@@ -440,9 +422,15 @@ def createPlaylist(option, opt, value, parser):
 
 def removePlaylist(option, opt, value, parser):
     xmms.playlist_remove(parser.values.name)
+        
+def presetLoad(option, opt, value, parser):
+    config = ConfigParser.RawConfigParser()
+    absolutePath = os.path.expanduser("~/.config/xmms2/clients/openboxMenu/configPresets.ini")
+    config.read(absolutePath)
     
-def configSet(option, opt, value, parser):
-    xmms.config_set_value(parser.values.configKey, parser.values.configValue)
+    for key, value in config.items(parser.values.presetName):
+        xmms.config_set_value(key, value)
+
 #===============================================================================
 #Main
 if __name__ == "__main__":
@@ -486,12 +474,12 @@ if __name__ == "__main__":
 
     parser.add_option("--trackInfo", action="callback", callback=trackInfo, help="")
 
-
     parser.add_option("--config", action="callback", callback=config, help="")
-    parser.add_option("--config-set", action="callback", callback=configSet, help="")
     parser.add_option("--configKey", action="store", type="string", dest="configKey")
-    parser.add_option("--configValue", action="store", type="string", dest="configValue")
 
+    parser.add_option("--preset-load", action="callback", callback=presetLoad, help="")
+    parser.add_option("--presetName", action="store", type="string", dest="presetName")
+    
 
     (options, args) = parser.parse_args()
 
