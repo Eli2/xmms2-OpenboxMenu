@@ -1,0 +1,8 @@
+How to use config presets:
+copy configPresets.ini
+into ~/.config/xmms2/clients/openboxMenu/
+
+Usage
+-----
+
+[http://openbox.org/wiki/Help:Menus#Pipe_menus](http://openbox.org/wiki/Help:Menus#Pipe_menus)
