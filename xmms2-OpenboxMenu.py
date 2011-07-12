@@ -258,26 +258,39 @@ class Config():
             for preset in config.sections():
                 Button(preset, "preset-load", 
                       { "presetName"  : preset} ).write()
-        
-        
+              
             Seperator().write()
-        
+
             namespaces = set()
+            submenues = list()
         
             for entry in resultData:
                 namespaces.add(entry.split('.')[0])
                 
             for setEntry in namespaces:
-                PipeMenu(setEntry, "config", 
-                     {"configKey": str(setEntry)} ).write()
+                submenues.append(PipeMenu(setEntry, "config", {"configKey": str(setEntry)} ))
+            
+            Menu("view all", "configView", submenues).write()
+             
         else:
-            namespaces = set()
+            namespaces = list()
             for entry in resultData:
                 if entry.startswith(self.configKey):
-                    namespaces.add(entry)
+                    namespaces.append(entry)
                     
+            namespaces.sort()
+            
+            displayKeyChars = 0
             for entry in namespaces:
-                Label(entry +"\t\t\t" + resultData[entry]).write()
+                displayKeyChars = max(displayKeyChars, len(entry))
+                print len(entry)
+                                
+            print displayKeyChars
+            
+            for entry in namespaces:
+                padding = displayKeyChars - len(entry) + 1
+                Label(entry + (" " * padding) + "\t" + resultData[entry]).write()
+                
 
 #===============================================================================
 #Main Menu
