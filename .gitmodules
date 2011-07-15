@@ -1,0 +1,3 @@
+[submodule "pyOpenboxMenu"]
+	path = pyOpenboxMenu
+	url = git://github.com/Eli2/pyOpenboxMenu.git
