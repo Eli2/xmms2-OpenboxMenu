@@ -254,14 +254,22 @@ def menu():
         artist = readString(result, 'artist')
         album = readString(result, 'album')
         title = readString(result, 'title')
-
-        jumpButton = Button("jump", parametersToString("playlistJump", {"listPosition": str(id)}))
-        deleteButton = Button("delete", parametersToString("removeFromPlaylist", {"listPosition": str(id)} ))
         
+        subMenuId = "xmms-activePlaylist-" + str(medialibId)
         entryLabel = "{0}|  {1} - {2} - {3}".format(
                       str(id).zfill(3), artist, album, title)
                      
-        menuEntries.append(Menu("xmms-activePlaylist-"+str(medialibId), entryLabel, [jumpButton, Separator(), deleteButton], medialibId == activeId ))
+        subMenu = Menu(subMenuId, entryLabel,
+            [
+                Button("jump", parametersToString("playlistJump", {"listPosition": str(id)})),
+                Separator(),
+                PipeMenu("Infos", parametersToString("trackInfo", {"id": str(medialibId)})),
+                Separator(),
+                Button("delete", parametersToString("removeFromPlaylist", {"listPosition": str(id)} ))
+            ],
+            medialibId == activeId )
+        
+        menuEntries.append(subMenu)
 
     Container(menuEntries).write()
 
