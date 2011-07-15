@@ -53,6 +53,14 @@ def humanReadableSize(size):
         if size < 1024.0:
             return "%3.2f%s" % (size, x)
         size /= 1024.0
+        
+def humanReadableDuration(milliseconds):
+    seconds = int(milliseconds) / 1000
+    minutes, seconds = divmod(seconds, 60)
+    if minutes > 0:
+        return "{0}m {1}s".format(minutes, seconds)
+    else:
+        return "{1}s".format(seconds)
 
 def readString(dictionary, key, default=""):
     if key in dictionary:
@@ -138,7 +146,7 @@ class TrackInfo():
         Label("Artist \t: " + readString(minfo, 'artist')).write()
         Label("Album \t: " + readString(minfo, 'album')).write()
         Label("Title \t: " + readString(minfo, 'title')).write()
-        Label("Duration \t: " + readString(minfo, 'duration')).write()
+        Label("Duration \t: " + humanReadableDuration(minfo['duration'])).write()
         Separator().write()     
         Label("Size \t\t: " + humanReadableSize(minfo["size"])).write()
         Label("Bitrate \t: " + readString(minfo, 'bitrate')).write()
@@ -157,7 +165,7 @@ class Config():
         resultData = xmms.config_list_values();
         
         if self.configKey is None:
-            Label("Presets:").write()
+            Separator("Presets:").write()
             config = ConfigParser.RawConfigParser()
             absolutePath = os.path.expanduser("~/.config/xmms2/clients/openboxMenu/configPresets.ini")
             config.read(absolutePath)
