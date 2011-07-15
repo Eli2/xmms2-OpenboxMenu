@@ -343,9 +343,7 @@ if __name__ == "__main__":
         xmms.connect(os.getenv("XMMS_PATH"))
         
     except IOError, detail:
-        print "<openbox_pipe_menu>"
-        Separator("Connection failed: "+ str(detail)).write()
-        print "</openbox_pipe_menu>"
+        Container(Separator("Connection failed: "+ str(detail))).write()
         sys.exit(1)
         
     parser = optparse.OptionParser()
