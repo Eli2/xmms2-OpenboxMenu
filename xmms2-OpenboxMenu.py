@@ -34,25 +34,19 @@ import tkSimpleDialog
 import xmmsclient
 from xmmsclient import collections as xc
 
-from xml.sax.saxutils import escape, unescape, quoteattr
+from pyOpenboxMenu.pyOpenboxMenu import *
+
 #===============================================================================
 #Helper Methods
-def marker(isMarked):
-    if isMarked is None:
-        return ""
-    if isMarked:
-        return "=> "
-    else:
-        return ".     "
-
-def parametersToString(command, parameters):
+def parametersToString(command, parameters = None):
     parameterString = ""
     if parameters is not None:
         for (key, value) in parameters.items():
             parameterString += "--" + key + "=" + quoteattr(str(value)) + " "
 
-    parameterString += "--" + command + " "
-    return parameterString
+    parameterString += "--" + command
+    command = "{0} {1}".format(__file__, parameterString)
+    return command
 
 def humanReadableSize(size):
     for x in ['bytes','KB','MB','GB']:
@@ -71,93 +65,6 @@ def readString(dictionary, key, default=""):
         return default
 
 #===============================================================================
-#Classes
-class Label():
-    def __init__(self, label, isMarked=None):
-        self.label = label
-        self.isMarked = isMarked
-    
-    def write(self):
-        formattedLabel = quoteattr(marker(self.isMarked) + self.label)
-        
-        print "<item label={0}>".format(formattedLabel)
-        print "</item>"
-
-class Button():
-    def __init__(self, label, command, parameters=None, isMarked=None):
-        self.label = label
-        self.command = command
-        self.parameters = parameters
-        self.isMarked = isMarked
-    
-    def write(self):
-        formattedLabel = marker(self.isMarked) + self.label
-        formattedLabel = quoteattr(formattedLabel)
-        paramString = parametersToString(self.command, self.parameters)
-        
-        print "<item label={0}>".format(formattedLabel)
-        print " <action name=\"Execute\">"
-        print "  <execute>{0} {1}</execute>".format(__file__, paramString)
-        print " </action>"
-        print "</item>"
-
-class Menu():
-    def __init__(self, id, label, entries=None, isMarked=None):
-        self.id = id
-        self.label = label
-        self.entries = entries
-        self.isMarked = isMarked
-        
-    def write(self):
-        formattedMarker = marker(self.isMarked) + self.label
-        print "<menu id={0} label={1}>".format(quoteattr(self.id),
-                                               quoteattr(formattedMarker))
-        
-        for entry in self.entries:
-            if entry is not None:
-                entry.write()
-
-        print "</menu>"
-
-class PipeMenu():
-    def __init__(self, label, command, parameters=None, isMarked=None):
-        self.label = label
-        self.command = command
-        self.parameters = parameters
-        self.isMarked = isMarked
-    
-    def write(self):
-        formattedLabel = quoteattr(marker(self.isMarked) + self.label)
-        paramString = parametersToString(self.command, self.parameters)  
-        command = quoteattr("{0} {1}".format(__file__, paramString))
-
-        print "<menu execute={0} id={1} label={2}/>".format(command,
-                                                            quoteattr(paramString),
-                                                            formattedLabel)
-
-class Seperator():
-    def __init__(self, label=None):
-        self.label = label
-    
-    def write(self):
-        if self.label is None:
-            print "<separator/>"
-        else:
-            print "<separator label={0}/>".format(quoteattr(self.label))
-
-class Container():
-    def __init__(self, entry):
-        self.entry = entry
-        
-    def write(self):
-        print "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-        print "<openbox_pipe_menu>"
-
-        self.entry.write()
-
-        print "</openbox_pipe_menu>"
-
-#===============================================================================
 #Writers
 class AlphabetIndex():
     def write(self):
@@ -167,9 +74,8 @@ class AlphabetIndex():
             results = xmms.coll_query_infos( artist, ["artist"])
             
             groupLabel = "{0} ({1})".format(str(key), str(len(results)))
-            PipeMenu(groupLabel,
-                     "alphabetIndexArtists", 
-                     {"alphabetIndex": str(key)} ).write()
+            command = parametersToString("alphabetIndexArtists", {"alphabetIndex": str(key)})
+            PipeMenu(groupLabel, command).write()
 
 class ArtistsList():
     def __init__(self, artist):
@@ -180,7 +86,8 @@ class ArtistsList():
 
         for result in results:
             artist = readString(result, 'artist')
-            PipeMenu(artist, "indexAlbum", {"artist": artist} ).write()
+            command = parametersToString("indexAlbum", {"artist": artist})
+            PipeMenu(artist, command).write()
 
 class AlbumList():
     def __init__(self, artist):
@@ -194,7 +101,8 @@ class AlbumList():
             if result["album"] is not None:
                 album = readString(result, 'album')
                 label = "[" + readString(result, 'date') + "] " + album
-                PipeMenu(label, "indexTracks", {"artist": self.artist, "album": album} ).write()
+                command = parametersToString("indexTracks", {"artist": self.artist, "album": album})
+                PipeMenu(label, command).write()
 
 class TrackList():
     def __init__(self, artist, album):
@@ -212,11 +120,10 @@ class TrackList():
             id = str(result["id"])
             title = readString(result, 'title')
             trackNumber = readString(result, 'tracknr')
-                        
-            deleteButton = Button("delete", "removeFromPlaylist", {"listPosition": str(counter)})
-            addToCurrentPlaylist = Button("Add to Playlist", "insertIntoPlaylist", {"id": str(id)})
             
-            trackInfo = PipeMenu("Infos", "trackInfo", {"id": str(id)})  
+            deleteButton = Button("delete", parametersToString("removeFromPlaylist", {"listPosition": str(counter)}))
+            addToCurrentPlaylist = Button("Add to Playlist", parametersToString("insertIntoPlaylist", {"id": str(id)}))
+            trackInfo = PipeMenu("Infos", parametersToString("trackInfo", {"id": str(id)}))  
             
             Menu("xmms-track-"+id, trackNumber + " - " + title, [addToCurrentPlaylist, trackInfo]).write()
             counter +=1
@@ -256,8 +163,7 @@ class Config():
             config.read(absolutePath)
             
             for preset in config.sections():
-                Button(preset, "preset-load", 
-                      { "presetName"  : preset} ).write()
+                Button(preset, parametersToString("preset-load", { "presetName"  : preset})).write()
               
             Seperator().write()
 
@@ -268,7 +174,7 @@ class Config():
                 namespaces.add(entry.split('.')[0])
                 
             for setEntry in namespaces:
-                submenues.append(PipeMenu(setEntry, "config", {"configKey": str(setEntry)} ))
+                submenues.append(PipeMenu(setEntry, parametersToString("config", {"configKey": str(setEntry)}) ))
             
             Menu("view all", "configView", submenues).write()
              
@@ -301,41 +207,34 @@ def menu():
     activePlaylistIds = xmms.playlist_list_entries()
     activeId = xmms.playback_current_id()
 
-    print "<openbox_pipe_menu>"
+    menuEntries = list()
 
     if status == xmmsclient.PLAYBACK_STATUS_PLAY:
-        Button("⧐ Pause", "pause").write()
+        menuEntries.append(Button("⧐ Pause", parametersToString("pause")))
     else:
-        Button("⧐ Play", "play").write()
+        menuEntries.append(Button("⧐ Play", parametersToString("play")))
 
-    Button("≫ next", "next").write()
-    Button("≪ prev", "prev").write()
-    Seperator().write()
+    menuEntries.append(Button("≫ next", parametersToString("next")))
+    menuEntries.append(Button("≪ prev", parametersToString("prev")))
+    menuEntries.append(Seperator())
     
-    PipeMenu("Medialib", "alphabetIndexMenu", {}).write()
-    PipeMenu("Config", "config", {}).write()
-    Seperator().write()
+    menuEntries.append(PipeMenu("Medialib", parametersToString("alphabetIndexMenu")))
+    menuEntries.append(PipeMenu("Config", parametersToString("config")))
+    menuEntries.append(Seperator())
 
-    newPlaylistButton = Button("New Playlist", "createPlaylist")
+    newPlaylistButton = Button("New Playlist", parametersToString("createPlaylist"))
     playlistMenu = [newPlaylistButton, Seperator()];
     
     for playlist in playlists:
-        loadButton = Button("load", "loadPlaylist", {"name": playlist})
-        deleteButton = Button("delete", "removePlaylist", {"name": playlist})
+        loadButton = Button("load", parametersToString("loadPlaylist", {"name": playlist}))
+        deleteButton = Button("delete", parametersToString("removePlaylist", {"name": playlist}))
         
-        playlistMenu.append(Menu("xmms-playlist-"+playlist,
-                                 playlist,
-                                 [loadButton, Seperator(), deleteButton],
-                                 playlist == activePlaylist))
+        playlistMenu.append(Menu("xmms-playlist-"+playlist, playlist, [loadButton, Seperator(), deleteButton], playlist == activePlaylist))
 
-    Menu("xmms-playlists",
-         "Playlist: {0}".format(activePlaylist),
-         playlistMenu ).write()
-
-    Seperator().write()
+    menuEntries.append(Menu("xmms-playlists", "Playlist: {0}".format(activePlaylist), playlistMenu))
+    menuEntries.append(Seperator())
 
     displayRange = 20
-
     if activePlaylistIds.count(activeId) == 1:
         selectedIndex = activePlaylistIds.index(activeId)
         
@@ -356,23 +255,15 @@ def menu():
         album = readString(result, 'album')
         title = readString(result, 'title')
 
-        jumpButton = Button("jump",
-                            "playlistJump",
-                            {"listPosition": str(id)} )
-
-        deleteButton = Button("delete",
-                              "removeFromPlaylist",
-                              {"listPosition": str(id)} )
+        jumpButton = Button("jump", parametersToString("playlistJump", {"listPosition": str(id)}))
+        deleteButton = Button("delete", parametersToString("removeFromPlaylist", {"listPosition": str(id)} ))
         
         entryLabel = "{0}|  {1} - {2} - {3}".format(
                       str(id).zfill(3), artist, album, title)
                      
-        Menu("xmms-activePlaylist-"+str(medialibId),
-             entryLabel,
-             [jumpButton, Seperator(), deleteButton],
-             medialibId == activeId ).write()
+        menuEntries.append(Menu("xmms-activePlaylist-"+str(medialibId), entryLabel, [jumpButton, Seperator(), deleteButton], medialibId == activeId ))
 
-    print "</openbox_pipe_menu>"
+    Container(menuEntries).write()
 
 #===============================================================================
 #Pipe Menus
