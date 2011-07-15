@@ -139,7 +139,7 @@ class TrackInfo():
         Label("Album \t: " + readString(minfo, 'album')).write()
         Label("Title \t: " + readString(minfo, 'title')).write()
         Label("Duration \t: " + readString(minfo, 'duration')).write()
-        Seperator().write()     
+        Separator().write()     
         Label("Size \t\t: " + humanReadableSize(minfo["size"])).write()
         Label("Bitrate \t: " + readString(minfo, 'bitrate')).write()
         
@@ -165,7 +165,7 @@ class Config():
             for preset in config.sections():
                 Button(preset, parametersToString("preset-load", { "presetName"  : preset})).write()
               
-            Seperator().write()
+            Separator().write()
 
             namespaces = set()
             submenues = list()
@@ -216,23 +216,23 @@ def menu():
 
     menuEntries.append(Button("≫ next", parametersToString("next")))
     menuEntries.append(Button("≪ prev", parametersToString("prev")))
-    menuEntries.append(Seperator())
+    menuEntries.append(Separator())
     
     menuEntries.append(PipeMenu("Medialib", parametersToString("alphabetIndexMenu")))
     menuEntries.append(PipeMenu("Config", parametersToString("config")))
-    menuEntries.append(Seperator())
+    menuEntries.append(Separator())
 
     newPlaylistButton = Button("New Playlist", parametersToString("createPlaylist"))
-    playlistMenu = [newPlaylistButton, Seperator()];
+    playlistMenu = [newPlaylistButton, Separator()];
     
     for playlist in playlists:
         loadButton = Button("load", parametersToString("loadPlaylist", {"name": playlist}))
         deleteButton = Button("delete", parametersToString("removePlaylist", {"name": playlist}))
         
-        playlistMenu.append(Menu("xmms-playlist-"+playlist, playlist, [loadButton, Seperator(), deleteButton], playlist == activePlaylist))
+        playlistMenu.append(Menu("xmms-playlist-"+playlist, playlist, [loadButton, Separator(), deleteButton], playlist == activePlaylist))
 
     menuEntries.append(Menu("xmms-playlists", "Playlist: {0}".format(activePlaylist), playlistMenu))
-    menuEntries.append(Seperator())
+    menuEntries.append(Separator())
 
     displayRange = 20
     if activePlaylistIds.count(activeId) == 1:
@@ -261,7 +261,7 @@ def menu():
         entryLabel = "{0}|  {1} - {2} - {3}".format(
                       str(id).zfill(3), artist, album, title)
                      
-        menuEntries.append(Menu("xmms-activePlaylist-"+str(medialibId), entryLabel, [jumpButton, Seperator(), deleteButton], medialibId == activeId ))
+        menuEntries.append(Menu("xmms-activePlaylist-"+str(medialibId), entryLabel, [jumpButton, Separator(), deleteButton], medialibId == activeId ))
 
     Container(menuEntries).write()
 
@@ -344,7 +344,7 @@ if __name__ == "__main__":
         
     except IOError, detail:
         print "<openbox_pipe_menu>"
-        Seperator("Connection failed: "+ str(detail)).write()
+        Separator("Connection failed: "+ str(detail)).write()
         print "</openbox_pipe_menu>"
         sys.exit(1)
         
