@@ -28,13 +28,109 @@ import ConfigParser
 import os
 import sys
 
+from xml.sax.saxutils import escape, unescape, quoteattr
+
 import Tkinter
 import tkSimpleDialog
 
 import xmmsclient
 from xmmsclient import collections as xc
 
-from pyOpenboxMenu.pyOpenboxMenu import *
+#===============================================================================
+#Openbox menu writers
+
+def marker(isMarked):
+    if isMarked is None:
+        return ""
+    if isMarked:
+        return "=> "
+    else:
+        return ".     "
+
+class Label():
+    def __init__(self, label, isMarked=None):
+        self.label = label
+        self.isMarked = isMarked
+    
+    def write(self):
+        formattedLabel = quoteattr(marker(self.isMarked) + self.label)
+        
+        print "<item label={0}>".format(formattedLabel)
+        print "</item>"
+
+class Button():
+    def __init__(self, label, command, isMarked=None):
+        self.label = label
+        self.command = command
+        self.isMarked = isMarked
+    
+    def write(self):
+        formattedLabel = marker(self.isMarked) + self.label
+        formattedLabel = quoteattr(formattedLabel)
+        
+        print "<item label={0}>".format(formattedLabel)
+        print " <action name=\"Execute\">"
+        print "  <execute>{0}</execute>".format(self.command)
+        print " </action>"
+        print "</item>"
+
+class Menu():
+    def __init__(self, id, label, entries=None, isMarked=None):
+        self.id = id
+        self.label = label
+        self.entries = entries
+        self.isMarked = isMarked
+        
+    def write(self):
+        formattedMarker = marker(self.isMarked) + self.label
+        print "<menu id={0} label={1}>".format(quoteattr(self.id),
+                                               quoteattr(formattedMarker))
+        
+        for entry in self.entries:
+            if entry is not None:
+                entry.write()
+
+        print "</menu>"
+
+class PipeMenu():
+    def __init__(self, label, command, isMarked=None):
+        self.label = label
+        self.command = command
+        self.isMarked = isMarked
+    
+    def write(self):
+        formattedLabel = quoteattr(marker(self.isMarked) + self.label)
+
+        print "<menu execute={0} id={1} label={2}/>".format(quoteattr(self.command),
+                                                            quoteattr(self.command),
+                                                            formattedLabel)
+
+class Separator():
+    def __init__(self, label=None):
+        self.label = label
+    
+    def write(self):
+        if self.label is None:
+            print "<separator/>"
+        else:
+            print "<separator label={0}/>".format(quoteattr(self.label))
+
+class Container():
+    def __init__(self, entries):
+        self.entries = entries
+        
+    def write(self):
+        print "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+        print "<openbox_pipe_menu>"
+
+        if isinstance(self.entries, list):
+            for entry in self.entries:
+                if entry is not None:
+                    entry.write()
+        else:
+            self.entries.write()
+
+        print "</openbox_pipe_menu>"
 
 #===============================================================================
 #Helper Methods
