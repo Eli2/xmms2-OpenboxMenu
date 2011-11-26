@@ -23,10 +23,11 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import optparse
 import ConfigParser
 import os
 import sys
+
+from pipes import quote
 
 from xml.sax.saxutils import escape, unescape, quoteattr
 
@@ -35,6 +36,40 @@ import tkSimpleDialog
 
 import xmmsclient
 from xmmsclient import collections as xc
+
+#===============================================================================
+#Helper Methods    
+def createCommand(parameters):
+    parameterString = ""
+
+    for id, val in enumerate(parameters):
+        parameterString += quote(str(val)) + " "
+    
+    return "{0} {1}".format(__file__, parameterString)
+
+def humanReadableSize(size):
+    for x in ['bytes','KB','MB','GB']:
+        if size < 1024.0:
+            return "%3.2f%s" % (size, x)
+        size /= 1024.0
+        
+def humanReadableDuration(milliseconds):
+    seconds = int(milliseconds) / 1000
+    minutes, seconds = divmod(seconds, 60)
+    if minutes > 0:
+        return "{0}m {1}s".format(minutes, seconds)
+    else:
+        return "{1}s".format(seconds)
+
+def readString(dictionary, key, default=""):
+    if key in dictionary:
+        value = dictionary[key]
+        if isinstance(value, basestring):
+            return value.encode('utf8')
+        else:
+            return str(value)
+    else:
+        return default
 
 #===============================================================================
 #Openbox menu writers
@@ -59,18 +94,20 @@ class Label():
         print "</item>"
 
 class Button():
-    def __init__(self, label, command, isMarked=None):
+    def __init__(self, label, commands, isMarked=None):
         self.label = label
-        self.command = command
+        self.commands = commands
         self.isMarked = isMarked
     
     def write(self):
         formattedLabel = marker(self.isMarked) + self.label
         formattedLabel = quoteattr(formattedLabel)
         
+        command = createCommand(self.commands)
+        
         print "<item label={0}>".format(formattedLabel)
         print " <action name=\"Execute\">"
-        print "  <execute>{0}</execute>".format(self.command)
+        print "  <execute>{0}</execute>".format(command)
         print " </action>"
         print "</item>"
 
@@ -93,16 +130,18 @@ class Menu():
         print "</menu>"
 
 class PipeMenu():
-    def __init__(self, label, command, isMarked=None):
+    def __init__(self, label, commands, isMarked=None):
         self.label = label
-        self.command = command
+        self.commands = commands
         self.isMarked = isMarked
     
     def write(self):
         formattedLabel = quoteattr(marker(self.isMarked) + self.label)
 
-        print "<menu execute={0} id={1} label={2}/>".format(quoteattr(self.command),
-                                                            quoteattr(self.command),
+        command = createCommand(self.commands)
+
+        print "<menu execute={0} id={1} label={2}/>".format(quoteattr(command),
+                                                            quoteattr(command),
                                                             formattedLabel)
 
 class Separator():
@@ -133,42 +172,6 @@ class Container():
         print "</openbox_pipe_menu>"
 
 #===============================================================================
-#Helper Methods
-def parametersToString(command, parameters = None):
-    parameterString = ""
-    if parameters is not None:
-        for (key, value) in parameters.items():
-            parameterString += "--" + key + "=" + quoteattr(str(value)) + " "
-
-    parameterString += "--" + command
-    command = "{0} {1}".format(__file__, parameterString)
-    return command
-
-def humanReadableSize(size):
-    for x in ['bytes','KB','MB','GB']:
-        if size < 1024.0:
-            return "%3.2f%s" % (size, x)
-        size /= 1024.0
-        
-def humanReadableDuration(milliseconds):
-    seconds = int(milliseconds) / 1000
-    minutes, seconds = divmod(seconds, 60)
-    if minutes > 0:
-        return "{0}m {1}s".format(minutes, seconds)
-    else:
-        return "{1}s".format(seconds)
-
-def readString(dictionary, key, default=""):
-    if key in dictionary:
-        value = dictionary[key]
-        if isinstance(value, basestring):
-            return value.encode('utf8')
-        else:
-            return str(value)
-    else:
-        return default
-
-#===============================================================================
 #Writers
 class AlphabetIndex():
     def write(self):
@@ -178,8 +181,7 @@ class AlphabetIndex():
             results = xmms.coll_query_infos( artist, ["artist"])
             
             groupLabel = "{0} ({1})".format(str(key), str(len(results)))
-            command = parametersToString("alphabetIndexArtists", {"alphabetIndex": str(key)})
-            PipeMenu(groupLabel, command).write()
+            PipeMenu(groupLabel, ["alphabetIndexArtists", str(key)] ).write()
 
 class ArtistsList():
     def __init__(self, artist):
@@ -190,8 +192,7 @@ class ArtistsList():
 
         for result in results:
             artist = readString(result, 'artist')
-            command = parametersToString("indexAlbum", {"artist": artist})
-            PipeMenu(artist, command).write()
+            PipeMenu(artist, ["indexAlbum", artist] ).write()
 
 class AlbumList():
     def __init__(self, artist):
@@ -205,8 +206,7 @@ class AlbumList():
             if result["album"] is not None:
                 album = readString(result, 'album')
                 label = "[" + readString(result, 'date') + "] " + album
-                command = parametersToString("indexTracks", {"artist": self.artist, "album": album})
-                PipeMenu(label, command).write()
+                PipeMenu(label, ["indexTracks", self.artist, album] ).write()
 
 class TrackList():
     def __init__(self, artist, album):
@@ -225,9 +225,9 @@ class TrackList():
             title = readString(result, 'title')
             trackNumber = readString(result, 'tracknr')
             
-            deleteButton = Button("delete", parametersToString("removeFromPlaylist", {"listPosition": str(counter)}))
-            addToCurrentPlaylist = Button("Add to Playlist", parametersToString("insertIntoPlaylist", {"id": str(id)}))
-            trackInfo = PipeMenu("Infos", parametersToString("trackInfo", {"id": str(id)}))  
+            deleteButton = Button("delete", ["removeFromPlaylist", str(counter)] )
+            addToCurrentPlaylist = Button("Add to Playlist", ["track", "add", str(id)] )
+            trackInfo = PipeMenu("Infos", ["track", "info", str(id)] )  
             
             Menu("xmms-track-"+id, trackNumber + " - " + title, [addToCurrentPlaylist, trackInfo]).write()
             counter +=1
@@ -267,7 +267,7 @@ class Config():
             config.read(absolutePath)
             
             for preset in config.sections():
-                Button(preset, parametersToString("preset-load", { "presetName"  : preset})).write()
+                Button(preset, ["preset-load", preset] ).write()
               
             Separator().write()
 
@@ -278,7 +278,7 @@ class Config():
                 namespaces.add(entry.split('.')[0])
                 
             for setEntry in namespaces:
-                submenues.append(PipeMenu(setEntry, parametersToString("config", {"configKey": str(setEntry)}) ))
+                submenues.append(PipeMenu(setEntry, ["config", str(setEntry)] ))
             
             Menu("view all", "configView", submenues).write()
              
@@ -314,24 +314,24 @@ def menu():
     menuEntries = list()
 
     if status == xmmsclient.PLAYBACK_STATUS_PLAY:
-        menuEntries.append(Button("⧐ Pause", parametersToString("pause")))
+        menuEntries.append(Button("⧐ Pause", ["pause"] ))
     else:
-        menuEntries.append(Button("⧐ Play", parametersToString("play")))
+        menuEntries.append(Button("⧐ Play", ["play"] ))
 
-    menuEntries.append(Button("≫ next", parametersToString("next")))
-    menuEntries.append(Button("≪ prev", parametersToString("prev")))
+    menuEntries.append(Button("≫ next", ["next"] ))
+    menuEntries.append(Button("≪ prev", ["prev"] ))
     menuEntries.append(Separator())
     
-    menuEntries.append(PipeMenu("Medialib", parametersToString("alphabetIndexMenu")))
-    menuEntries.append(PipeMenu("Config", parametersToString("config")))
+    menuEntries.append(PipeMenu("Medialib", ["alphabetIndexMenu"] ))
+    menuEntries.append(PipeMenu("Config", ["config"] ))
     menuEntries.append(Separator())
 
-    newPlaylistButton = Button("New Playlist", parametersToString("createPlaylist"))
+    newPlaylistButton = Button("New Playlist", ["createPlaylist"] )
     playlistMenu = [newPlaylistButton, Separator()];
     
     for playlist in playlists:
-        loadButton = Button("load", parametersToString("loadPlaylist", {"name": playlist}))
-        deleteButton = Button("delete", parametersToString("removePlaylist", {"name": playlist}))
+        loadButton = Button("load", ["loadPlaylist", playlist] )
+        deleteButton = Button("delete", ["removePlaylist", playlist] )
         
         playlistMenu.append(Menu("xmms-playlist-"+playlist, playlist, [loadButton, Separator(), deleteButton], playlist == activePlaylist))
 
@@ -365,11 +365,11 @@ def menu():
                      
         subMenu = Menu(subMenuId, entryLabel,
             [
-                Button("jump", parametersToString("playlistJump", {"listPosition": str(id)})),
+                Button("jump", ["jump", str(id)] ),
                 Separator(),
-                PipeMenu("Infos", parametersToString("trackInfo", {"id": str(medialibId)})),
+                PipeMenu("Infos", ["track", "info", str(medialibId)] ),
                 Separator(),
-                Button("delete", parametersToString("removeFromPlaylist", {"listPosition": str(id)} ))
+                Button("delete", ["removeFromPlaylist", str(id)] )
             ],
             medialibId == activeId )
         
@@ -378,56 +378,8 @@ def menu():
     Container(menuEntries).write()
 
 #===============================================================================
-#Pipe Menus
-def alphabetIndexMenu(option, opt, value, parser):
-    Container(AlphabetIndex()).write()
-
-def alphabetIndexArtists(option, opt, value, parser):
-    Container(ArtistsList(unescape(parser.values.alphabetIndex))).write()
-
-def indexAlbum(option, opt, value, parser):
-    Container(AlbumList(unescape(parser.values.artist))).write()
-
-def indexTracks(option, opt, value, parser):
-    Container(TrackList(unescape(parser.values.artist),
-                        unescape(parser.values.album))).write()
-                        
-def trackInfo(option, opt, value, parser):
-    Container(TrackInfo(parser.values.id)).write()
-
-def config(option, opt, value, parser):
-    Container(Config(parser.values.configKey)).write()
-  
-#===============================================================================
 #Commands
-def play(option, opt, value, parser):
-    xmms.playback_start()
-
-def pause(option, opt, value, parser):
-    xmms.playback_pause()
-
-def next(option, opt, value, parser):
-    xmms.playlist_set_next_rel(1)
-    xmms.playback_tickle()
-
-def prev(option, opt, value, parser):
-    xmms.playlist_set_next_rel(-1)
-    xmms.playback_tickle()
-
-def playlistJump(option, opt, value, parser):
-    xmms.playlist_set_next(parser.values.listPosition)
-    xmms.playback_tickle()
-
-def insertIntoPlaylist(option, opt, value, parser):
-    xmms.playlist_insert_id(0, parser.values.id)
-    
-def removeFromPlaylist(option, opt, value, parser):
-    xmms.playlist_remove_entry(parser.values.listPosition)
-        
-def loadPlaylist(option, opt, value, parser):
-    xmms.playlist_load(parser.values.name)
-
-def createPlaylist(option, opt, value, parser):
+def createPlaylist():
     root = Tkinter.Tk()
     root.withdraw()
 
@@ -435,16 +387,13 @@ def createPlaylist(option, opt, value, parser):
                                     "Enter a new Playlist Name")
     if name is not None:
         xmms.playlist_create(name)
-
-def removePlaylist(option, opt, value, parser):
-    xmms.playlist_remove(parser.values.name)
-        
-def presetLoad(option, opt, value, parser):
+   
+def presetLoad(name):
     config = ConfigParser.RawConfigParser()
     absolutePath = os.path.expanduser("~/.config/xmms2/clients/openboxMenu/configPresets.ini")
     config.read(absolutePath)
     
-    for key, value in config.items(parser.values.presetName):
+    for key, value in config.items(name):
         xmms.config_set_value(key, value)
 
 #===============================================================================
@@ -457,46 +406,82 @@ if __name__ == "__main__":
     except IOError, detail:
         Container(Separator("Connection failed: "+ str(detail))).write()
         sys.exit(1)
-        
-    parser = optparse.OptionParser()
-
-    parser.add_option("--play", action="callback", callback=play, help="play")
-    parser.add_option("--pause", action="callback", callback=pause, help="stop")
-    parser.add_option("--next", action="callback", callback=next, help="next")
-    parser.add_option("--prev", action="callback", callback=prev, help="prev")
-
-    parser.add_option("--id", action="store", type="int", dest="id")
-    parser.add_option("--artist", action="store", type="string", dest="artist")
-    parser.add_option("--album", action="store", type="string", dest="album")
-
-    parser.add_option("--alphabetIndex", action="store", type="string", dest="alphabetIndex")
-    parser.add_option("--alphabetIndexMenu", action="callback", callback=alphabetIndexMenu, help="")
-    parser.add_option("--alphabetIndexArtists", action="callback", callback=alphabetIndexArtists, help="")
-    parser.add_option("--indexAlbum", action="callback", callback=indexAlbum, help="")
-    parser.add_option("--indexTracks", action="callback", callback=indexTracks, help="")
-
-    parser.add_option("--listPosition", action="store", type="int", dest="listPosition")
-    parser.add_option("--playlistJump", action="callback", callback=playlistJump, help="Jump to index in Playlist")
-
-    parser.add_option("--insertIntoPlaylist", action="callback", callback=insertIntoPlaylist)
-    parser.add_option("--removeFromPlaylist", action="callback", callback=removeFromPlaylist)
-
-    parser.add_option("--name", action="store", type="string", dest="name")
-    parser.add_option("--loadPlaylist", action="callback", callback=loadPlaylist, help="")
-    parser.add_option("--createPlaylist", action="callback", callback=createPlaylist, help="")
-    parser.add_option("--removePlaylist", action="callback", callback=removePlaylist, help="")
-
-    parser.add_option("--trackInfo", action="callback", callback=trackInfo, help="")
-
-    parser.add_option("--config", action="callback", callback=config, help="")
-    parser.add_option("--configKey", action="store", type="string", dest="configKey")
-
-    parser.add_option("--preset-load", action="callback", callback=presetLoad, help="")
-    parser.add_option("--presetName", action="store", type="string", dest="presetName")
     
-
-    (options, args) = parser.parse_args()
-
-    if len(sys.argv) == 1:
-        menu()
+    paramterCount = len(sys.argv)
+    
+    if paramterCount == 1:
+    	menu()
+    elif paramterCount >= 2:
+        command = sys.argv[1]
+        
+        if command == "play":
+            xmms.playback_start()
+        
+        if command == "pause":
+            xmms.playback_pause()
+            
+        if command == "next":
+            xmms.playlist_set_next_rel(1)
+            xmms.playback_tickle()
+            
+        if command == "prev":
+            xmms.playlist_set_next_rel(-1)
+            xmms.playback_tickle()
+  
+        if command == "jump":
+            position = int(sys.argv[2])
+            xmms.playlist_set_next(position)
+            xmms.playback_tickle()
+        
+        if command == "track":
+            trackCommand = sys.argv[2]
+            trackId = sys.argv[3]
+            
+            if trackCommand == "add":
+                xmms.playlist_insert_id(0, trackId)
+                
+            if trackCommand == "info":
+                Container(TrackInfo(trackId)).write()
+            
+        if command == "removeFromPlaylist":
+            position = int(sys.argv[2])
+            xmms.playlist_remove_entry(position)
+        
+        if command == "createPlaylist":
+            createPlaylist()
+        
+        if command == "loadPlaylist":
+            playlistName = str(sys.argv[2])
+            xmms.playlist_load(playlistName)
+            
+        if command == "removePlaylist":
+            playlistName = str(sys.argv[2])
+            xmms.playlist_remove(playlistName)
+            
+        if command == "preset-load":
+            presetName = str(sys.argv[2])
+            presetLoad(presetName)
+            
+        if command == "alphabetIndexMenu":
+            Container(AlphabetIndex()).write()
+            
+        if command == "alphabetIndexArtists":
+            index = str(sys.argv[2])
+            Container(ArtistsList(unescape(index))).write()
+            
+        if command == "indexAlbum":
+            artist = str(sys.argv[2])
+            Container(AlbumList(unescape(artist))).write()
+        
+        if command == "indexTracks":
+            artist = str(sys.argv[2])
+            album = str(sys.argv[3])
+            Container(TrackList(unescape(artist), unescape(album))).write()
+            
+        if command == "config":
+            configKey = None
+            if paramterCount == 3:
+                configKey = str(sys.argv[2])
+                
+            Container(Config(configKey)).write()
 
