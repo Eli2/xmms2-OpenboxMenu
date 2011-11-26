@@ -326,8 +326,9 @@ def menu():
     menuEntries.append(PipeMenu("Config", ["config"] ))
     menuEntries.append(Separator())
 
-    newPlaylistButton = Button("New Playlist", ["createPlaylist"] )
-    playlistMenu = [newPlaylistButton, Separator()];
+    playlistMenu = list()
+    playlistMenu.append(Button("New Playlist", ["createPlaylist"] ))
+    playlistMenu.append(Separator())
     
     for playlist in playlists:
         loadButton = Button("load", ["loadPlaylist", playlist] )
