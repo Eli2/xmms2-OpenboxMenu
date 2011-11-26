@@ -301,6 +301,27 @@ class Config():
                 padding = displayKeyChars - len(entry) + 1
                 Label(entry + (" " * padding) + "\t" + resultData[entry]).write()
                 
+def volumeMenu():
+    currentVolumes = xmms.playback_volume_get()
+    masterVolume = currentVolumes['master']
+
+    volumes = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+
+    menuEntries = list()   
+      
+    volumeHasBeenSelected = False
+    
+    for id, val in enumerate(volumes):
+        isSelectedVolume = False
+    
+        if masterVolume <= val and not volumeHasBeenSelected:
+            isSelectedVolume = True
+            volumeHasBeenSelected = True
+
+        menuEntries.append(Button(str(val)+"%", ["volume", val], isSelectedVolume))
+    
+    Container(menuEntries).write()
+    
 
 #===============================================================================
 #Main Menu
@@ -320,6 +341,9 @@ def menu():
 
     menuEntries.append(Button("≫ next", ["next"] ))
     menuEntries.append(Button("≪ prev", ["prev"] ))
+    menuEntries.append(Separator())
+    
+    menuEntries.append(PipeMenu("Volume", ["volumeMenu"] ))
     menuEntries.append(Separator())
     
     menuEntries.append(PipeMenu("Medialib", ["alphabetIndexMenu"] ))
@@ -462,7 +486,14 @@ if __name__ == "__main__":
         if command == "preset-load":
             presetName = str(sys.argv[2])
             presetLoad(presetName)
+        
+        if command == "volumeMenu":
+            volumeMenu()
             
+        if command == "volume":
+            volume = int(sys.argv[2])
+            xmms.playback_volume_set("master", volume)
+        
         if command == "alphabetIndexMenu":
             Container(AlphabetIndex()).write()
             
