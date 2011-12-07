@@ -319,32 +319,13 @@ class VolumeMenu():
 
 		    Button(str(val)+"%", ["volume", val], isSelectedVolume).write()
 
-#===============================================================================
-#Main Menu
-class MainMenu():
+class PlaylistMenu():
 	def write(self):
-		status = xmms.playback_status()
 		playlists = xmms.playlist_list()
 		activePlaylist = xmms.playlist_current_active()
 		activePlaylistIds = xmms.playlist_list_entries()
 		activeId = xmms.playback_current_id()
-
-		if status == xmmsclient.PLAYBACK_STATUS_PLAY:
-		    Button("⧐ Pause", ["pause"] ).write()
-		else:
-		    Button("⧐ Play", ["play"] ).write()
-
-		Button("≫ next", ["next"] ).write()
-		Button("≪ prev", ["prev"] ).write()
-		Separator().write()
-		
-		PipeMenu("Volume", ["volumeMenu"] ).write()
-		Separator().write()
-		
-		PipeMenu("Medialib", ["alphabetIndexMenu"] ).write()
-		PipeMenu("Config", ["config"] ).write()
-		Separator().write()
-
+	
 		playlistMenu = list()
 		playlistMenu.append(Button("New Playlist", ["createPlaylist"] ))
 		playlistMenu.append(Separator())
@@ -394,6 +375,30 @@ class MainMenu():
 		        medialibId == activeId )
 		    
 		    subMenu.write()
+
+#===============================================================================
+#Main Menu
+class MainMenu():
+	def write(self):
+		status = xmms.playback_status()
+
+		if status == xmmsclient.PLAYBACK_STATUS_PLAY:
+		    Button("⧐ Pause", ["pause"] ).write()
+		else:
+		    Button("⧐ Play", ["play"] ).write()
+
+		Button("≫ next", ["next"] ).write()
+		Button("≪ prev", ["prev"] ).write()
+		Separator().write()
+		
+		PipeMenu("Volume", ["volumeMenu"] ).write()
+		Separator().write()
+		
+		PipeMenu("Medialib", ["alphabetIndexMenu"] ).write()
+		PipeMenu("Config", ["config"] ).write()
+		Separator().write()
+		
+		PlaylistMenu().write()
 
 #===============================================================================
 #Commands
