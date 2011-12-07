@@ -29,6 +29,7 @@ import sys
 
 from pipes import quote
 
+from urllib import unquote_plus
 from xml.sax.saxutils import escape, unescape, quoteattr
 
 import Tkinter
@@ -247,7 +248,7 @@ class TrackInfo():
         Label("Size \t\t: " + humanReadableSize(minfo["size"])).write()
         Label("Bitrate \t: " + readString(minfo, 'bitrate')).write()
         
-        url = readString(minfo, 'url')
+        url = unquote_plus(readString(minfo, 'url'))
         filename = url.split('/')[-1]
 
         Label("Url \t: " + url).write()
