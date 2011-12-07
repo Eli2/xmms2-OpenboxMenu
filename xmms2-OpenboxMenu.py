@@ -339,7 +339,7 @@ class PlaylistMenu():
 		Menu("xmms-playlists", "Playlist: {0}".format(activePlaylist), playlistMenu).write()
 		Separator().write()
 
-		displayRange = 20
+		displayRange = 5
 		if activePlaylistIds.count(activeId) == 1:
 		    selectedIndex = activePlaylistIds.index(activeId)
 		    
@@ -351,30 +351,50 @@ class PlaylistMenu():
 		
 		displayRange = range(minIndex, maxIndex)
 		
-		for id in displayRange:
-		    medialibId = activePlaylistIds[id]
-		        
-		    result = xmms.medialib_get_info(medialibId)
+		belowRangeSublist = list()
+		inRangeSublist = list()
+		aboveRangeSublist = list()
+		
+		for id in range(0, len(activePlaylistIds)):		
+			if id < minIndex:
+				currentSublist = belowRangeSublist
+			elif id > maxIndex:
+				currentSublist = aboveRangeSublist
+			else:
+				currentSublist = inRangeSublist
+			
+			medialibId = activePlaylistIds[id]
 
-		    artist = readString(result, 'artist')
-		    album = readString(result, 'album')
-		    title = readString(result, 'title')
-		    
-		    subMenuId = "xmms-activePlaylist-" + str(medialibId)
-		    entryLabel = "{0}|  {1} - {2} - {3}".format(
-		                  str(id).zfill(3), artist, album, title)
+			result = xmms.medialib_get_info(medialibId)
+
+			artist = readString(result, 'artist')
+			album = readString(result, 'album')
+			title = readString(result, 'title')
+
+			subMenuId = "xmms-activePlaylist-" + str(medialibId)
+			entryLabel = "{0}|  {1} - {2} - {3}".format(
+							str(id).zfill(3), artist, album, title)
 		                 
-		    subMenu = Menu(subMenuId, entryLabel,
-		        [
-		            Button("jump", ["jump", str(id)] ),
-		            Separator(),
-		            PipeMenu("Infos", ["track", "info", str(medialibId)] ),
-		            Separator(),
-		            Button("delete", ["removeFromPlaylist", str(id)] )
-		        ],
-		        medialibId == activeId )
+			subMenu = Menu(subMenuId, entryLabel,
+				[
+					Button("jump", ["jump", str(id)] ),
+					Separator(),
+					PipeMenu("Infos", ["track", "info", str(medialibId)] ),
+					Separator(),
+					Button("delete", ["removeFromPlaylist", str(id)] )
+    			],
+    			medialibId == activeId )
 		    
-		    subMenu.write()
+			currentSublist.append(subMenu)
+		
+		if len(belowRangeSublist) > 0:
+			Menu("activePlaylistBefore", "... before", belowRangeSublist).write()
+		
+		for foo in inRangeSublist:
+			foo.write()
+		
+		if len(aboveRangeSublist) > 0:
+			Menu("activePlaylistAfter", "... after", aboveRangeSublist).write()
 
 #===============================================================================
 #Main Menu
