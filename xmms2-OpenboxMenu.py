@@ -459,8 +459,8 @@ if __name__ == "__main__":
             xmms.playback_tickle()
         
         if command == "track":
-            trackCommand = sys.argv[2]
-            trackId = sys.argv[3]
+            trackCommand = str(sys.argv[2])
+            trackId = int(sys.argv[3])
             
             if trackCommand == "add":
                 xmms.playlist_insert_id(0, trackId)
