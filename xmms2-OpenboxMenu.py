@@ -401,9 +401,7 @@ class PlaylistMenu():
 #Main Menu
 class MainMenu():
 	def write(self):
-		status = xmms.playback_status()
-
-		if status == xmmsclient.PLAYBACK_STATUS_PLAY:
+		if xmms.playback_status() == xmmsclient.PLAYBACK_STATUS_PLAY:
 		    Button("⧐ Pause", ["pause"] ).write()
 		else:
 		    Button("⧐ Play", ["play"] ).write()
