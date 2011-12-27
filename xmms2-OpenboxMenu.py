@@ -339,7 +339,11 @@ class PlaylistMenu():
 
         Menu("xmms-playlists", "Playlist: {0}".format(activePlaylist), playlistMenu).write()
         Separator().write()
-
+        
+        if activePlaylistIds is None:
+            Label('Empty').write()
+            return
+        
         displayRange = 5
         if activePlaylistIds.count(activeId) == 1:
             selectedIndex = activePlaylistIds.index(activeId)
