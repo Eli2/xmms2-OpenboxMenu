@@ -304,120 +304,120 @@ class Config():
                 
 class VolumeMenu():
     def write(self):  
-		currentVolumes = xmms.playback_volume_get()
-		masterVolume = currentVolumes['master']
+        currentVolumes = xmms.playback_volume_get()
+        masterVolume = currentVolumes['master']
 
-		volumes = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-		  
-		volumeHasBeenSelected = False
-		
-		for id, val in enumerate(volumes):
-		    isSelectedVolume = False
-		
-		    if masterVolume <= val and not volumeHasBeenSelected:
-		        isSelectedVolume = True
-		        volumeHasBeenSelected = True
+        volumes = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+          
+        volumeHasBeenSelected = False
+        
+        for id, val in enumerate(volumes):
+            isSelectedVolume = False
+        
+            if masterVolume <= val and not volumeHasBeenSelected:
+                isSelectedVolume = True
+                volumeHasBeenSelected = True
 
-		    Button(str(val)+"%", ["volume", val], isSelectedVolume).write()
+            Button(str(val)+"%", ["volume", val], isSelectedVolume).write()
 
 class PlaylistMenu():
-	def write(self):
-		playlists = xmms.playlist_list()
-		activePlaylist = xmms.playlist_current_active()
-		activePlaylistIds = xmms.playlist_list_entries()
-		activeId = xmms.playback_current_id()
-	
-		playlistMenu = list()
-		playlistMenu.append(Button("New Playlist", ["createPlaylist"] ))
-		playlistMenu.append(Separator())
-		
-		for playlist in playlists:
-		    loadButton = Button("load", ["loadPlaylist", playlist] )
-		    deleteButton = Button("delete", ["removePlaylist", playlist] )
-		    
-		    playlistMenu.append(Menu("xmms-playlist-"+playlist, playlist, [loadButton, Separator(), deleteButton], playlist == activePlaylist))
+    def write(self):
+        playlists = xmms.playlist_list()
+        activePlaylist = xmms.playlist_current_active()
+        activePlaylistIds = xmms.playlist_list_entries()
+        activeId = xmms.playback_current_id()
+    
+        playlistMenu = list()
+        playlistMenu.append(Button("New Playlist", ["createPlaylist"] ))
+        playlistMenu.append(Separator())
+        
+        for playlist in playlists:
+            loadButton = Button("load", ["loadPlaylist", playlist] )
+            deleteButton = Button("delete", ["removePlaylist", playlist] )
+            
+            playlistMenu.append(Menu("xmms-playlist-"+playlist, playlist, [loadButton, Separator(), deleteButton], playlist == activePlaylist))
 
-		Menu("xmms-playlists", "Playlist: {0}".format(activePlaylist), playlistMenu).write()
-		Separator().write()
+        Menu("xmms-playlists", "Playlist: {0}".format(activePlaylist), playlistMenu).write()
+        Separator().write()
 
-		displayRange = 5
-		if activePlaylistIds.count(activeId) == 1:
-		    selectedIndex = activePlaylistIds.index(activeId)
-		    
-		    minIndex = max(0, selectedIndex - displayRange)
-		    maxIndex = min(len(activePlaylistIds), selectedIndex + 1 + displayRange)
-		else:
-		    minIndex = 0;
-		    maxIndex = min(len(activePlaylistIds), displayRange)
-		
-		displayRange = range(minIndex, maxIndex)
-		
-		belowRangeSublist = list()
-		inRangeSublist = list()
-		aboveRangeSublist = list()
-		
-		for id in range(0, len(activePlaylistIds)):		
-			if id < minIndex:
-				currentSublist = belowRangeSublist
-			elif id > maxIndex:
-				currentSublist = aboveRangeSublist
-			else:
-				currentSublist = inRangeSublist
-			
-			medialibId = activePlaylistIds[id]
+        displayRange = 5
+        if activePlaylistIds.count(activeId) == 1:
+            selectedIndex = activePlaylistIds.index(activeId)
+            
+            minIndex = max(0, selectedIndex - displayRange)
+            maxIndex = min(len(activePlaylistIds), selectedIndex + 1 + displayRange)
+        else:
+            minIndex = 0;
+            maxIndex = min(len(activePlaylistIds), displayRange)
+        
+        displayRange = range(minIndex, maxIndex)
+        
+        belowRangeSublist = list()
+        inRangeSublist = list()
+        aboveRangeSublist = list()
+        
+        for id in range(0, len(activePlaylistIds)):		
+            if id < minIndex:
+                currentSublist = belowRangeSublist
+            elif id > maxIndex:
+                currentSublist = aboveRangeSublist
+            else:
+                currentSublist = inRangeSublist
+            
+            medialibId = activePlaylistIds[id]
 
-			result = xmms.medialib_get_info(medialibId)
+            result = xmms.medialib_get_info(medialibId)
 
-			artist = readString(result, 'artist')
-			album = readString(result, 'album')
-			title = readString(result, 'title')
+            artist = readString(result, 'artist')
+            album = readString(result, 'album')
+            title = readString(result, 'title')
 
-			subMenuId = "xmms-activePlaylist-" + str(medialibId)
-			entryLabel = "{0}|  {1} - {2} - {3}".format(
-							str(id).zfill(3), artist, album, title)
-		                 
-			subMenu = Menu(subMenuId, entryLabel,
-				[
-					Button("jump", ["jump", str(id)] ),
-					Separator(),
-					PipeMenu("Infos", ["track", "info", str(medialibId)] ),
-					Separator(),
-					Button("delete", ["removeFromPlaylist", str(id)] )
-    			],
-    			medialibId == activeId )
-		    
-			currentSublist.append(subMenu)
-		
-		if len(belowRangeSublist) > 0:
-			Menu("activePlaylistBefore", "... before", belowRangeSublist).write()
-		
-		for foo in inRangeSublist:
-			foo.write()
-		
-		if len(aboveRangeSublist) > 0:
-			Menu("activePlaylistAfter", "... after", aboveRangeSublist).write()
+            subMenuId = "xmms-activePlaylist-" + str(medialibId)
+            entryLabel = "{0}|  {1} - {2} - {3}".format(
+                            str(id).zfill(3), artist, album, title)
+                         
+            subMenu = Menu(subMenuId, entryLabel,
+                [
+                    Button("jump", ["jump", str(id)] ),
+                    Separator(),
+                    PipeMenu("Infos", ["track", "info", str(medialibId)] ),
+                    Separator(),
+                    Button("delete", ["removeFromPlaylist", str(id)] )
+                ],
+                medialibId == activeId )
+            
+            currentSublist.append(subMenu)
+        
+        if len(belowRangeSublist) > 0:
+            Menu("activePlaylistBefore", "... before", belowRangeSublist).write()
+        
+        for foo in inRangeSublist:
+            foo.write()
+        
+        if len(aboveRangeSublist) > 0:
+            Menu("activePlaylistAfter", "... after", aboveRangeSublist).write()
 
 #===============================================================================
 #Main Menu
 class MainMenu():
-	def write(self):
-		if xmms.playback_status() == xmmsclient.PLAYBACK_STATUS_PLAY:
-		    Button("⧐ Pause", ["pause"] ).write()
-		else:
-		    Button("⧐ Play", ["play"] ).write()
+    def write(self):
+        if xmms.playback_status() == xmmsclient.PLAYBACK_STATUS_PLAY:
+            Button("⧐ Pause", ["pause"] ).write()
+        else:
+            Button("⧐ Play", ["play"] ).write()
 
-		Button("≫ next", ["next"] ).write()
-		Button("≪ prev", ["prev"] ).write()
-		Separator().write()
-		
-		PipeMenu("Volume", ["volumeMenu"] ).write()
-		Separator().write()
-		
-		PipeMenu("Medialib", ["alphabetIndexMenu"] ).write()
-		PipeMenu("Config", ["config"] ).write()
-		Separator().write()
-		
-		PlaylistMenu().write()
+        Button("≫ next", ["next"] ).write()
+        Button("≪ prev", ["prev"] ).write()
+        Separator().write()
+        
+        PipeMenu("Volume", ["volumeMenu"] ).write()
+        Separator().write()
+        
+        PipeMenu("Medialib", ["alphabetIndexMenu"] ).write()
+        PipeMenu("Config", ["config"] ).write()
+        Separator().write()
+        
+        PlaylistMenu().write()
 
 #===============================================================================
 #Commands
@@ -452,7 +452,7 @@ if __name__ == "__main__":
     paramterCount = len(sys.argv)
     
     if paramterCount == 1:
-    	Container(MainMenu()).write()
+        Container(MainMenu()).write()
     elif paramterCount >= 2:
         command = sys.argv[1]
         
@@ -505,7 +505,7 @@ if __name__ == "__main__":
             presetLoad(presetName)
         
         if command == "volumeMenu":
-	        Container(VolumeMenu()).write()
+            Container(VolumeMenu()).write()
             
         if command == "volume":
             volume = int(sys.argv[2])
