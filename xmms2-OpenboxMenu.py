@@ -254,24 +254,35 @@ class TrackInfo():
         Label("Url \t: " + url).write()
         Label("File \t: " + filename).write()
 
-class Config():
-    def __init__(self, configKey):
+class ConfigMenu():
+    def write(self):
+        Separator("Presets:").write()
+        ConfigPresets().write()
+        Separator().write()
+        ConfigView().write()
+
+class ConfigPresets():
+    def __init__(self):
+        self.config = ConfigParser.RawConfigParser()
+        absolutePath = os.path.expanduser("~/.config/xmms2/clients/openboxMenu/configPresets.ini")
+        self.config.read(absolutePath)
+        
+    def load(self, name):    
+        for key, value in self.config.items(name):
+            xmms.config_set_value(key, value)
+        
+    def write(self):        
+        for preset in self.config.sections():
+            Button(preset, ["preset-load", preset] ).write()
+        
+class ConfigView():
+    def __init__(self, configKey = None):
         self.configKey = configKey
 
     def write(self):      
         resultData = xmms.config_list_values();
         
         if self.configKey is None:
-            Separator("Presets:").write()
-            config = ConfigParser.RawConfigParser()
-            absolutePath = os.path.expanduser("~/.config/xmms2/clients/openboxMenu/configPresets.ini")
-            config.read(absolutePath)
-            
-            for preset in config.sections():
-                Button(preset, ["preset-load", preset] ).write()
-              
-            Separator().write()
-
             namespaces = set()
             submenues = list()
         
@@ -279,7 +290,7 @@ class Config():
                 namespaces.add(entry.split('.')[0])
                 
             for setEntry in namespaces:
-                submenues.append(PipeMenu(setEntry, ["config", str(setEntry)] ))
+                submenues.append(PipeMenu(setEntry, ["menu", "config-view", str(setEntry)] ))
             
             Menu("view all", "configView", submenues).write()
              
@@ -440,7 +451,7 @@ class MainMenu():
         Separator().write()
         
         PipeMenu("Medialib", ["menu", "index-alphabet"] ).write()
-        PipeMenu("Config", ["config"] ).write()
+        PipeMenu("Config", ["menu", "config"] ).write()
         Separator().write()
         
         PlaylistMenu().write()
@@ -455,14 +466,6 @@ def createPlaylist():
                                     "Enter a new Playlist Name")
     if name is not None:
         xmms.playlist_create(name)
-   
-def presetLoad(name):
-    config = ConfigParser.RawConfigParser()
-    absolutePath = os.path.expanduser("~/.config/xmms2/clients/openboxMenu/configPresets.ini")
-    config.read(absolutePath)
-    
-    for key, value in config.items(name):
-        xmms.config_set_value(key, value)
 
 #===============================================================================
 #Main
@@ -493,6 +496,16 @@ if __name__ == "__main__":
                 
             if menuName == "volume":
                 Container(VolumeMenu()).write()
+            
+            if menuName == "config":
+                Container(ConfigMenu()).write()
+            
+            if menuName == "config-view":
+                configKey = None
+                if paramterCount == 4:
+                    configKey = str(sys.argv[3])
+                
+                Container(ConfigView(configKey)).write()
                 
             if menuName == "index-alphabet":
                 Container(AlphabetIndex()).write()
@@ -543,14 +556,12 @@ if __name__ == "__main__":
             
         if command == "preset-load":
             presetName = str(sys.argv[2])
-            presetLoad(presetName)
+            ConfigPresets().load(presetName)
             
         if command == "volume":
             volume = int(sys.argv[2])
             xmms.playback_volume_set("master", volume)
-        
-
-            
+          
         if command == "alphabetIndexArtists":
             index = str(sys.argv[2])
             Container(ArtistsList(unescape(index))).write()
@@ -563,11 +574,4 @@ if __name__ == "__main__":
             artist = str(sys.argv[2])
             album = str(sys.argv[3])
             Container(TrackList(unescape(artist), unescape(album))).write()
-            
-        if command == "config":
-            configKey = None
-            if paramterCount == 3:
-                configKey = str(sys.argv[2])
-                
-            Container(Config(configKey)).write()
 
