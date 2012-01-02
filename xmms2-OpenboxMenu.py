@@ -442,10 +442,22 @@ class PlaylistEntriesMenu():
             subMenuId = "xmms-activePlaylist-" + str(medialibId)
             entryLabel = "{0}|  {1} - {2} - {3}".format(
                             str(id).zfill(3), artist, album, title)
+            
+            moveMenu = Menu("xmms-move-" + str(medialibId), "move",
+                [
+                    Button("move first", ["playlist-entry", "move", str(id), str(0)] ),
+                    Button("move -5", ["playlist-entry", "move", str(id), str(id - 5)] ),
+                    Button("move -1", ["playlist-entry", "move", str(id), str(id - 1)] ),
+                    Button("move +1", ["playlist-entry", "move", str(id), str(id + 1)] ),
+                    Button("move +5", ["playlist-entry", "move", str(id), str(id + 5)] ),
+                    Button("move last", ["playlist-entry", "move", str(id), str(len(self.entryIds) - 1)] )
+                ])
                          
             subMenu = Menu(subMenuId, entryLabel,
                 [
                     Button("jump", ["jump", str(id)] ),
+                    Separator(),
+                    moveMenu,
                     Separator(),
                     PipeMenu("Infos", ["track", "info", str(medialibId)] ),
                     Separator(),
@@ -565,6 +577,10 @@ if __name__ == "__main__":
         if command == "playlist-entry":
             subCommand = str(sys.argv[2])
             entryIndex = int(sys.argv[3])
+            
+            if subCommand == "move":
+                newIndex = int(sys.argv[4])
+                xmms.playlist_move(entryIndex, newIndex)
             
             if subCommand == "remove":
                 xmms.playlist_remove_entry(entryIndex)
