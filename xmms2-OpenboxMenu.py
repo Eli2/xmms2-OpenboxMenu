@@ -273,7 +273,15 @@ class ConfigPresets():
         
     def write(self):        
         for preset in self.config.sections():
-            Button(preset, ["preset-load", preset] ).write()
+            isActive = True
+            
+            for key, value in self.config.items(preset):
+                actualValue = xmms.config_get_value(key)
+                if value != actualValue:
+                    isActive = False
+                    break
+            
+            Button(preset, ["preset-load", preset], isActive).write()
         
 class ConfigView():
     def __init__(self, configKey = None):
