@@ -436,7 +436,7 @@ class MainMenu():
         Button("≪ prev", ["prev"] ).write()
         Separator().write()
         
-        PipeMenu("Volume", ["volumeMenu"] ).write()
+        PipeMenu("Volume", ["menu", "volume"] ).write()
         Separator().write()
         
         PipeMenu("Medialib", ["alphabetIndexMenu"] ).write()
@@ -490,6 +490,9 @@ if __name__ == "__main__":
                 direction = str(sys.argv[4])
                 
                 Container(PlaylistEntriesMenu(pos, direction)).write()
+                
+            if menuName == "volume":
+                Container(VolumeMenu()).write()
             
         if command == "play":
             xmms.playback_start()
@@ -538,9 +541,6 @@ if __name__ == "__main__":
         if command == "preset-load":
             presetName = str(sys.argv[2])
             presetLoad(presetName)
-        
-        if command == "volumeMenu":
-            Container(VolumeMenu()).write()
             
         if command == "volume":
             volume = int(sys.argv[2])
