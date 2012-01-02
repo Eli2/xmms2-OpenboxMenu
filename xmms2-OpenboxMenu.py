@@ -362,6 +362,9 @@ class PlaylistMenu():
         playlistMenu.append(Separator())
         
         for playlist in playlists:
+            if playlist.startswith('_'):
+                continue
+            
             loadButton = Button("load", ["loadPlaylist", playlist] )
             deleteButton = Button("delete", ["removePlaylist", playlist] )
             
