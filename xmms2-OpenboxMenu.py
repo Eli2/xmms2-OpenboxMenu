@@ -226,7 +226,6 @@ class TrackList():
             title = readString(result, 'title')
             trackNumber = readString(result, 'tracknr')
             
-            deleteButton = Button("delete", ["removeFromPlaylist", str(counter)] )
             addToCurrentPlaylist = Button("Add to Playlist", ["track", "add", str(id)] )
             trackInfo = PipeMenu("Infos", ["track", "info", str(id)] )  
             
@@ -450,7 +449,7 @@ class PlaylistEntriesMenu():
                     Separator(),
                     PipeMenu("Infos", ["track", "info", str(medialibId)] ),
                     Separator(),
-                    Button("delete", ["removeFromPlaylist", str(id)] )
+                    Button("delete", ["playlist-entry", "remove", str(id)] )
                 ],
                 medialibId == activeId ).write()
                 
@@ -563,9 +562,12 @@ if __name__ == "__main__":
             if trackCommand == "info":
                 Container(TrackInfo(trackId)).write()
             
-        if command == "removeFromPlaylist":
-            position = int(sys.argv[2])
-            xmms.playlist_remove_entry(position)
+        if command == "playlist-entry":
+            subCommand = str(sys.argv[2])
+            entryIndex = int(sys.argv[3])
+            
+            if subCommand == "remove":
+                xmms.playlist_remove_entry(entryIndex)
         
         if command == "createPlaylist":
             createPlaylist()
