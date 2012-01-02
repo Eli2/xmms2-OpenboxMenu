@@ -324,9 +324,7 @@ class PlaylistMenu():
     def write(self):
         playlists = xmms.playlist_list()
         activePlaylist = xmms.playlist_current_active()
-        activePlaylistIds = xmms.playlist_list_entries()
-        activeId = xmms.playback_current_id()
-    
+
         playlistMenu = list()
         playlistMenu.append(Button("New Playlist", ["createPlaylist"] ))
         playlistMenu.append(Separator())
@@ -340,35 +338,66 @@ class PlaylistMenu():
         Menu("xmms-playlists", "Playlist: {0}".format(activePlaylist), playlistMenu).write()
         Separator().write()
         
-        if activePlaylistIds is None:
-            Label('Empty').write()
+        displayRange = 10
+
+        activeId = xmms.playback_current_id()
+        activePlaylistIds = xmms.playlist_list_entries()
+        
+        if (activePlaylistIds != None) and (activePlaylistIds.count(activeId) == 1):
+            selectedIndex = activePlaylistIds.index(activeId)
+            PlaylistEntriesMenu(selectedIndex, "both", displayRange).write()
+        else:
+            PlaylistEntriesMenu(0, "top", displayRange).write()
+
+class PlaylistEntriesMenu():
+    def __init__(self, pos, expandDirection, maxDisplayed = 50):
+        self.entryIds = xmms.playlist_list_entries()
+        if self.entryIds is None:
             return
         
-        displayRange = 5
-        if activePlaylistIds.count(activeId) == 1:
-            selectedIndex = activePlaylistIds.index(activeId)
+        self.expandBottom = False
+        self.expandTop = False
+        
+        if expandDirection == "bottom":
+            if pos - maxDisplayed > 0:
+                self.expandBottom = True
+                
+            self.positions = range(max(pos - maxDisplayed, 0), pos)
+             
+        if expandDirection == "top":
+            if pos + maxDisplayed < len(self.entryIds):
+                self.expandTop = True
+                
+            self.positions = range(pos, min(pos + maxDisplayed, len(self.entryIds)))
             
-            minIndex = max(0, selectedIndex - displayRange)
-            maxIndex = min(len(activePlaylistIds), selectedIndex + 1 + displayRange)
-        else:
-            minIndex = 0;
-            maxIndex = min(len(activePlaylistIds), displayRange)
-        
-        displayRange = range(minIndex, maxIndex)
-        
-        belowRangeSublist = list()
-        inRangeSublist = list()
-        aboveRangeSublist = list()
-        
-        for id in range(0, len(activePlaylistIds)):		
-            if id < minIndex:
-                currentSublist = belowRangeSublist
-            elif id > maxIndex:
-                currentSublist = aboveRangeSublist
-            else:
-                currentSublist = inRangeSublist
+        if expandDirection == "both":
+            halfDisplayed = maxDisplayed/2
             
-            medialibId = activePlaylistIds[id]
+            if pos - halfDisplayed > 0:
+                self.expandBottom = True
+            
+            if pos + halfDisplayed < len(self.entryIds):
+                self.expandTop = True
+                
+            self.positions = range(max(pos - halfDisplayed, 0), min(pos + halfDisplayed, len(self.entryIds)))
+                
+    def write(self):
+        if self.entryIds is None:
+            Label('Playlist is Empty').write()
+            return
+            
+        if self.expandBottom:
+            PipeMenu("... before", ["menu", "playlist-entries", str(self.positions[0]), "bottom"] ).write()
+            
+        try:
+            currentPosition = xmms.playlist_current_pos()
+        except:
+            currentPosition = None
+
+        for id in self.positions:		
+            activeId = xmms.playback_current_id()
+            
+            medialibId = self.entryIds[id]
 
             result = xmms.medialib_get_info(medialibId)
 
@@ -388,18 +417,11 @@ class PlaylistMenu():
                     Separator(),
                     Button("delete", ["removeFromPlaylist", str(id)] )
                 ],
-                medialibId == activeId )
-            
-            currentSublist.append(subMenu)
+                medialibId == activeId ).write()
+                
+        if self.expandTop:
+            PipeMenu("... after", ["menu", "playlist-entries", str(self.positions[-1]+1), "top"]).write()
         
-        if len(belowRangeSublist) > 0:
-            Menu("activePlaylistBefore", "... before", belowRangeSublist).write()
-        
-        for foo in inRangeSublist:
-            foo.write()
-        
-        if len(aboveRangeSublist) > 0:
-            Menu("activePlaylistAfter", "... after", aboveRangeSublist).write()
 
 #===============================================================================
 #Main Menu
@@ -460,6 +482,15 @@ if __name__ == "__main__":
     elif paramterCount >= 2:
         command = sys.argv[1]
         
+        if command == "menu":
+            menuName = str(sys.argv[2])
+            
+            if menuName == "playlist-entries":
+                pos = int(sys.argv[3])
+                direction = str(sys.argv[4])
+                
+                Container(PlaylistEntriesMenu(pos, direction)).write()
+            
         if command == "play":
             xmms.playback_start()
         
