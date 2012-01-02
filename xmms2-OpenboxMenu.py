@@ -439,7 +439,7 @@ class MainMenu():
         PipeMenu("Volume", ["menu", "volume"] ).write()
         Separator().write()
         
-        PipeMenu("Medialib", ["alphabetIndexMenu"] ).write()
+        PipeMenu("Medialib", ["menu", "index-alphabet"] ).write()
         PipeMenu("Config", ["config"] ).write()
         Separator().write()
         
@@ -493,6 +493,9 @@ if __name__ == "__main__":
                 
             if menuName == "volume":
                 Container(VolumeMenu()).write()
+                
+            if menuName == "index-alphabet":
+                Container(AlphabetIndex()).write()
             
         if command == "play":
             xmms.playback_start()
@@ -546,8 +549,7 @@ if __name__ == "__main__":
             volume = int(sys.argv[2])
             xmms.playback_volume_set("master", volume)
         
-        if command == "alphabetIndexMenu":
-            Container(AlphabetIndex()).write()
+
             
         if command == "alphabetIndexArtists":
             index = str(sys.argv[2])
