@@ -263,15 +263,28 @@ class ConfigMenu():
 
 class ConfigPresets():
     def __init__(self):
+        xmmsDirectory = xmmsclient.userconfdir_get()
+        configPath = os.path.join(xmmsDirectory, "clients/openboxMenu/configPresets.ini")
+    
+        self.errorMessage = None
+    
         self.config = ConfigParser.RawConfigParser()
-        absolutePath = os.path.expanduser("~/.config/xmms2/clients/openboxMenu/configPresets.ini")
-        self.config.read(absolutePath)
+        try:
+            result = self.config.read(configPath)
+            if len(result) != 1:
+                self.errorMessage = 'Preset file not found'
+        except ConfigParser.ParsingError, error:
+            self.errorMessage = 'Preset file parsing error'
         
     def load(self, name):    
         for key, value in self.config.items(name):
             xmms.config_set_value(key, value)
         
-    def write(self):        
+    def write(self):
+        if self.errorMessage != None:
+            Separator(self.errorMessage).write()
+            return
+        
         for preset in self.config.sections():
             isActive = True
             
