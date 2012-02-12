@@ -328,7 +328,11 @@ class ConfigView():
                 Label(entry + (" " * padding) + "\t" + resultData[entry]).write()
                 
 class VolumeMenu():
-    def write(self):  
+    def write(self):
+        if xmms.playback_status() == xmmsclient.PLAYBACK_STATUS_STOP:
+            Separator("Cannot set Volume on Stopped stream.").write()
+            return
+        
         currentVolumes = xmms.playback_volume_get()
         masterVolume = currentVolumes['master']
 
