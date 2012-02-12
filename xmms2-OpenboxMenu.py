@@ -26,6 +26,8 @@ from pipes import quote
 from urllib import unquote_plus
 from xml.sax.saxutils import escape, unescape, quoteattr
 
+import ConfigParser
+
 import Tkinter
 import tkSimpleDialog
 
