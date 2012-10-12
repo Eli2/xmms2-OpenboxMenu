@@ -137,7 +137,7 @@ try:
 
     import xmmsclient
     from xmmsclient import collections as xc
-except ImportError, error:
+except ImportError as error:
     Container([Separator("Failed to load required modules!"), Separator(str(error)) ]).write()
     sys.exit(1)
 
@@ -277,7 +277,7 @@ class ConfigPresets():
             result = self.config.read(configPath)
             if len(result) != 1:
                 self.errorMessage = 'Preset file not found'
-        except ConfigParser.ParsingError, error:
+        except ConfigParser.ParsingError as error:
             self.errorMessage = 'Preset file parsing error'
         
     def load(self, name):    
@@ -518,7 +518,7 @@ if __name__ == "__main__":
     try:
         xmms.connect(os.getenv("XMMS_PATH"))
         
-    except IOError, detail:
+    except IOError as detail:
         Container(Separator("Connection failed: "+ str(detail))).write()
         sys.exit(1)
     
