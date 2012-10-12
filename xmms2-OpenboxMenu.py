@@ -37,8 +37,8 @@ class Label():
     def write(self):
         formattedLabel = quoteattr(marker(self.isMarked) + self.label)
         
-        print "<item label={0}>".format(formattedLabel)
-        print "</item>"
+        print("<item label={0}>".format(formattedLabel))
+        print("</item>")
 
 class Button():
     def __init__(self, label, commands, isMarked=None):
@@ -52,11 +52,11 @@ class Button():
         
         command = createCommand(self.commands)
         
-        print "<item label={0}>".format(formattedLabel)
-        print " <action name=\"Execute\">"
-        print "  <execute>{0}</execute>".format(command)
-        print " </action>"
-        print "</item>"
+        print("<item label={0}>".format(formattedLabel))
+        print(" <action name=\"Execute\">")
+        print("  <execute>{0}</execute>".format(command))
+        print(" </action>")
+        print("</item>")
 
 class Menu():
     def __init__(self, id, label, entries=None, isMarked=None):
@@ -67,14 +67,14 @@ class Menu():
         
     def write(self):
         formattedMarker = marker(self.isMarked) + self.label
-        print "<menu id={0} label={1}>".format(quoteattr(self.id),
-                                               quoteattr(formattedMarker))
+        print("<menu id={0} label={1}>".format(quoteattr(self.id),
+                                               quoteattr(formattedMarker)))
         
         for entry in self.entries:
             if entry is not None:
                 entry.write()
 
-        print "</menu>"
+        print("</menu>")
 
 class PipeMenu():
     def __init__(self, label, commands, isMarked=None):
@@ -87,9 +87,9 @@ class PipeMenu():
 
         command = createCommand(self.commands)
 
-        print "<menu execute={0} id={1} label={2}/>".format(quoteattr(command),
+        print("<menu execute={0} id={1} label={2}/>".format(quoteattr(command),
                                                             quoteattr(command),
-                                                            formattedLabel)
+                                                            formattedLabel))
 
 class Separator():
     def __init__(self, label=None):
@@ -97,17 +97,17 @@ class Separator():
     
     def write(self):
         if self.label is None:
-            print "<separator/>"
+            print("<separator/>")
         else:
-            print "<separator label={0}/>".format(quoteattr(self.label))
+            print("<separator label={0}/>".format(quoteattr(self.label)))
 
 class Container():
     def __init__(self, entries):
         self.entries = entries
         
     def write(self):
-        print "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-        print "<openbox_pipe_menu>"
+        print("<?xml version=\"1.0\" encoding=\"utf-8\"?>")
+        print("<openbox_pipe_menu>")
 
         if isinstance(self.entries, list):
             for entry in self.entries:
@@ -116,7 +116,7 @@ class Container():
         else:
             self.entries.write()
 
-        print "</openbox_pipe_menu>"
+        print("</openbox_pipe_menu>")
 
 #===============================================================================
 #Imports
@@ -330,9 +330,9 @@ class ConfigView():
             displayKeyChars = 0
             for entry in namespaces:
                 displayKeyChars = max(displayKeyChars, len(entry))
-                print len(entry)
+                print(len(entry))
                                 
-            print displayKeyChars
+            print(displayKeyChars)
             
             for entry in namespaces:
                 padding = displayKeyChars - len(entry) + 1
