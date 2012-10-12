@@ -120,6 +120,7 @@ class Container():
 
 #===============================================================================
 #Imports
+
 import os
 import sys
 
@@ -132,13 +133,13 @@ import ConfigParser
 
 try:
     import Tkinter
-    import tkSimpleDialog                  
+    import tkSimpleDialog
+
+    import xmmsclient
+    from xmmsclient import collections as xc
 except ImportError, error:
     Container([Separator("Failed to load required modules!"), Separator(str(error)) ]).write()
     sys.exit(1)
-
-import xmmsclient
-from xmmsclient import collections as xc
 
 #===============================================================================
 #Helper Methods    
