@@ -18,56 +18,6 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import os
-import sys
-
-from pipes import quote
-
-from urllib import unquote_plus
-from xml.sax.saxutils import escape, unescape, quoteattr
-
-import ConfigParser
-
-import Tkinter
-import tkSimpleDialog
-
-import xmmsclient
-from xmmsclient import collections as xc
-
-#===============================================================================
-#Helper Methods    
-def createCommand(parameters):
-    parameterString = ""
-
-    for id, val in enumerate(parameters):
-        parameterString += quote(str(val)) + " "
-    
-    return "{0} {1}".format(__file__, parameterString)
-
-def humanReadableSize(size):
-    for x in ['bytes','KB','MB','GB']:
-        if size < 1024.0:
-            return "%3.2f%s" % (size, x)
-        size /= 1024.0
-        
-def humanReadableDuration(milliseconds):
-    seconds = int(milliseconds) / 1000
-    minutes, seconds = divmod(seconds, 60)
-    if minutes > 0:
-        return "{0}m {1}s".format(minutes, seconds)
-    else:
-        return "{1}s".format(seconds)
-
-def readString(dictionary, key, default=""):
-    if key in dictionary:
-        value = dictionary[key]
-        if isinstance(value, basestring):
-            return value.encode('utf8')
-        else:
-            return str(value)
-    else:
-        return default
-
 #===============================================================================
 #Openbox menu writers
 
@@ -167,6 +117,64 @@ class Container():
             self.entries.write()
 
         print "</openbox_pipe_menu>"
+
+#===============================================================================
+#Imports
+import os
+import sys
+
+from pipes import quote
+
+from urllib import unquote_plus
+from xml.sax.saxutils import escape, unescape, quoteattr
+
+import ConfigParser
+
+try:
+    import Tkinter
+    import tkSimpleDialog                  
+except ImportError, error:
+    Container([Separator("Failed to load required modules!"), Separator(str(error)) ]).write()
+    sys.exit(1)
+
+import xmmsclient
+from xmmsclient import collections as xc
+
+#===============================================================================
+#Helper Methods    
+def createCommand(parameters):
+    parameterString = ""
+
+    for id, val in enumerate(parameters):
+        parameterString += quote(str(val)) + " "
+    
+    return "{0} {1}".format(__file__, parameterString)
+
+def humanReadableSize(size):
+    for x in ['bytes','KB','MB','GB']:
+        if size < 1024.0:
+            return "%3.2f%s" % (size, x)
+        size /= 1024.0
+        
+def humanReadableDuration(milliseconds):
+    seconds = int(milliseconds) / 1000
+    minutes, seconds = divmod(seconds, 60)
+    if minutes > 0:
+        return "{0}m {1}s".format(minutes, seconds)
+    else:
+        return "{1}s".format(seconds)
+
+def readString(dictionary, key, default=""):
+    if key in dictionary:
+        value = dictionary[key]
+        if isinstance(value, basestring):
+            return value.encode('utf8')
+        else:
+            return str(value)
+    else:
+        return default
+
+
 
 #===============================================================================
 #Writers
