@@ -143,13 +143,8 @@ except ImportError as error:
 
 #===============================================================================
 #Helper Methods    
-def createCommand(parameters):
-    parameterString = ""
-
-    for id, val in enumerate(parameters):
-        parameterString += quoteattr(str(val)) + " "
-    
-    return "{0} {1}".format(__file__, parameterString)
+def createCommand(parameters):   
+    return __file__ + ' ' + ' '.join([quoteattr(str(i)) for i in parameters])
 
 def humanReadableSize(size):
     for x in ['bytes','KB','MB','GB']:
