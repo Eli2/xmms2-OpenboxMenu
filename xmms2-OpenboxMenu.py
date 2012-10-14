@@ -147,7 +147,7 @@ def createCommand(parameters):
     parameterString = ""
 
     for id, val in enumerate(parameters):
-        parameterString += quote(str(val)) + " "
+        parameterString += quoteattr(str(val)) + " "
     
     return "{0} {1}".format(__file__, parameterString)
 
