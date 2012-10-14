@@ -237,6 +237,9 @@ class TrackList():
             Menu("xmms-track-"+id, trackNumber + " - " + title, [addToCurrentPlaylist, trackInfo]).write()
             counter +=1
 
+        Separator().write()
+        Button("Add to Playlist", ["album", "add", self.artist, self.album] ).write()
+
 class TrackInfo():
     def __init__(self, id):
         self.id = int(id)
@@ -582,6 +585,19 @@ if __name__ == "__main__":
                 
             if trackCommand == "info":
                 Container(TrackInfo(trackId)).write()
+
+        if command == "album":
+            albumCommand = str(sys.argv[2])
+            artistName = str(sys.argv[3])
+            albumName = str(sys.argv[4])
+
+            if albumCommand == "add":
+                match = xc.Intersection(xc.Match(field="artist", value=artistName),
+                                        xc.Match(field="album", value=albumName))
+
+                trackIds = xmms.coll_query_infos( match, ["id"])
+                for trackId in trackIds:
+                    xmms.playlist_add_id(trackId["id"])
             
         if command == "playlist-entry":
             subCommand = str(sys.argv[2])
